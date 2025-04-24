@@ -4,9 +4,25 @@ part of 'app_pages.dart';
 abstract class Routes {
   Routes._();
   static const HOME = _Paths.HOME;
+  static const LOGIN_PAGE = _Paths.LOGIN_PAGE;
+  static const NOTIFY_PAGE = _Paths.NOTIFY_PAGE;
+  static const TICKET_LIST_PAGE = _Paths.TICKET_LIST_PAGE;
+  static const TICKET_DETAIL_PAGE = _Paths.TICKET_DETAIL_PAGE;
+  static const PROFILE_PAGE = _Paths.PROFILE_PAGE;
+  static const SPLASH_SCREEN = _Paths.SPLASH_SCREEN;
+  static const INDEX = _Paths.INDEX;
+  static const UPDATE_PASSWORD = _Paths.UPDATE_PASSWORD;
 }
 
 abstract class _Paths {
   _Paths._();
   static const HOME = '/home';
+  static const LOGIN_PAGE = '/login-page';
+  static const NOTIFY_PAGE = '/notify-page';
+  static const TICKET_LIST_PAGE = '/ticket-list-page';
+  static const TICKET_DETAIL_PAGE = '/ticket-detail-page';
+  static const PROFILE_PAGE = '/profile-page';
+  static const SPLASH_SCREEN = '/splash-screen';
+  static const INDEX = '/index';
+  static const UPDATE_PASSWORD = '/update-password';
 }
