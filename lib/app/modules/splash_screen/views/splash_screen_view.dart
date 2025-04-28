@@ -10,6 +10,8 @@ class SplashScreenView extends GetView<SplashScreenController> {
   
   @override
   Widget build(BuildContext context) {
+    return GetBuilder<SplashScreenController>(
+      builder: (controller) {
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -26,9 +28,9 @@ class SplashScreenView extends GetView<SplashScreenController> {
             ),
           ),
 
-          ElevatedButton(onPressed: () {
-            controller.navigateToNextScreen();
-          }, child: Text("Get Started")),
+          // ElevatedButton(onPressed: () {
+          //   controller.navigateToNextScreen();
+          // }, child: Text("Get Started")),
           Center(
             child: LinearProgressIndicator(
               color: AppColorList.AppColor,
@@ -36,6 +38,9 @@ class SplashScreenView extends GetView<SplashScreenController> {
           )
         ],
       ),
+    );
+      }
+    
     );
   }
 }

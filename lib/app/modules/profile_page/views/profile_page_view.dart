@@ -33,9 +33,9 @@ class ProfilePageView extends GetView<ProfilePageController> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Profile'),
-          backgroundColor: AppColorList.AppColor,
+          backgroundColor: AppColorList.AppButtonColor,
         ),
-        backgroundColor: AppColorList.AppTextField,
+        backgroundColor: AppColorList.AppColor,
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(

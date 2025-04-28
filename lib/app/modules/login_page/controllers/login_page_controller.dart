@@ -8,29 +8,36 @@ import 'package:insabhi_icon_office/app/Constants/constant.dart';
 
 import '../../../routes/app_pages.dart';
 
-class LoginPageController extends GetxController {
+class LoginPageController extends GetxController with GetSingleTickerProviderStateMixin {
   //TODO: Implement LoginPageController
   var UserName = TextEditingController();
   var Password = TextEditingController();
   var isLoading = false.obs;
   final box = GetStorage();
   var isLogged = false.obs;
+  late AnimationController animationController;
+  late Animation<double> animation;
+  var rememberMe = false.obs;
 
   @override
   void onInit() {
     super.onInit();
-    // Future.delayed(const Duration(seconds: 2), () {
-    //   isLogged.value = box.read('isLogged') ?? false;
 
-    //   if (isLogged.value) {
-    //     Get.offNamed(Routes.INDEX);
-    //   } else {
-    //     Get.offNamed(Routes.LOGIN_PAGE);
-    //   }
-    // });
+    animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    animation = Tween<double>(begin: 0,end: 30).animate(
+      CurvedAnimation(
+        parent: animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    
   }
 
-  Future<void> login(String UserName, String Password) async {
+  Future<void> login(String UserName, String Password, bool remember ) async {
     isLoading.value = true;
     if(UserName.isEmpty || Password.isEmpty) {
       Get.snackbar('Error', 'Username and password cannot be empty.');
@@ -52,7 +59,6 @@ class LoginPageController extends GetxController {
         var res = jsonDecode(response.body);
         if (res["success"] == true) {
           isLoading.value = false;
-          var isLogging = true;
           var name = res["data"]["name"];
           var login = res["data"]["login"];
           var password = res["data"]["password"];
@@ -64,13 +70,19 @@ class LoginPageController extends GetxController {
           box.write('password', password);
           box.write('email', email);
           box.write('phone', phone);
-          box.write('isLogged', isLogging);
+          if (remember == true){
+            var isLogging = true;
+            box.write('isLogged', isLogging);
+          }
+          
           box.write('partnerId', partnerId);
           var print = box.read('isLogged');
           log("Permit list: $print");
           Get.snackbar('Success', 'Login successful!');
           log('Login Successfully with status code: ${response.statusCode}');
           Get.offAllNamed(Routes.HOME);
+        } else {
+          isLoading.value = false;
         }
       } else {
         isLoading.value = false;

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "981787185283",
+    "project_id": "insabhi-icon-office",
+    "storage_bucket": "insabhi-icon-office.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:981787185283:android:e66e2f574006a2050d0bb6",
+        "android_client_info": {
+          "package_name": "com.example.insabhi_icon_office"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlSSMMvxLdF23iV-EvZhBh42EVlZlfgNU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
