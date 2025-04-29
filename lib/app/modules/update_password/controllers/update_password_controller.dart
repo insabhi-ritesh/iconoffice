@@ -8,16 +8,12 @@ import 'package:http/http.dart' as http;
 import 'package:insabhi_icon_office/app/Constants/constant.dart';
 import 'package:insabhi_icon_office/app/common/app_color.dart';
 import 'package:insabhi_icon_office/app/modules/home/controllers/home_controller.dart';
-import 'package:insabhi_icon_office/app/modules/login_page/controllers/login_page_controller.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class UpdatePasswordController extends GetxController {
-  //TODO: Implement UpdatePasswordController
-
   final box = GetStorage();
 
-  final HomeController homeController = 
-  Get.find<HomeController>();
+  final HomeController homeController = Get.find<HomeController>();
   final oldPasswordController = TextEditingController();
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
@@ -29,6 +25,12 @@ class UpdatePasswordController extends GetxController {
     log(oldPassword);
     log(newPassword);
     log(confirmPassword);
+
+    // Check if any password field is empty
+    if (oldPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
+      Get.snackbar('Error', 'All password fields must be filled');
+      return;
+    }
 
     try {
       final username = box.read('email');
@@ -98,7 +100,7 @@ class UpdatePasswordController extends GetxController {
               height: 200,
               width: 200,
               child: SvgPicture.asset(
-                'assets/images/reset_image.svg', // Make sure this image exists in your assets folder
+                'assets/images/reset_image.svg',
                 height: 80,
                 fit: BoxFit.contain,
               ),
@@ -110,25 +112,24 @@ class UpdatePasswordController extends GetxController {
               'Reset Password \nSuccessful',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 26, 
-                fontWeight: FontWeight.w500, 
+                fontSize: 26,
+                fontWeight: FontWeight.w500,
                 color: AppColorList.AppColor,
-                
-                ),
+              ),
             ),
             const SizedBox(height: 10),
             const Text(
               'Please wait...\nYou will be directed to the homepage',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20,
-              fontWeight: FontWeight.w300),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w300),
             ),
 
             const SizedBox(height: 20),
 
             // Loader at the bottom
             LoadingAnimationWidget.fourRotatingDots(
-              color: AppColorList.AppColor, size: 80
+              color: AppColorList.AppColor,
+              size: 80,
             ),
           ],
         ),
@@ -136,5 +137,4 @@ class UpdatePasswordController extends GetxController {
       barrierDismissible: false,
     );
   }
-
 }

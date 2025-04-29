@@ -16,17 +16,27 @@ class HomeView extends GetView<HomeController> {
         return Scaffold(
           // backgroundColor: AppColorList.AppColor,
           appBar: AppBar(
-            title: Text('Ticket List',
-              style: TextStyle(
-                color: AppColorList.WhiteText,
+            title: Container(
+              padding: EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                  color: AppColorList.AppButtonColor,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
+              child: Text('Ticket List',
+                style: TextStyle(
+                  color: AppColorList.WhiteText,
+                ),
               ),
             ),
             backgroundColor: AppColorList.AppButtonColor,
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.notification_important_sharp,
-                  color: AppColorList.AppTextColor,
+                icon:  Icon(Icons.notification_important_sharp,
+                  color: AppColorList.WhiteText,
                 ),
                 onPressed: () {
                   Get.toNamed(Routes.NOTIFY_PAGE);
@@ -99,25 +109,26 @@ class HomeView extends GetView<HomeController> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Ticket Title: ${ticket.ticketTitle}',
+                            // Ticket title with fallback
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  const TextSpan(
+                                    text: 'Ticket Title: ',
+                                    style: TextStyle(fontWeight: AppFontWeight.font4),
+                                  ),
+                                  TextSpan(
+                                    text: ticket.ticketTitle?.isNotEmpty == true
+                                      ? ticket.ticketTitle
+                                      : 'No Title Available',
+                                    style: TextStyle(fontWeight: AppFontWeight.font3),
+                                  ),
+                                ],
+                              ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                             ),
-                            // RichText(
-                            //   text: TextSpan(
-                            //     style: DefaultTextStyle.of(context).style,
-                            //     children: [
-                            //       const TextSpan(text: 'Partner: ', style: TextStyle(fontWeight: AppFontWeight.font4)),
-                            //       TextSpan(
-                            //         text: '${ticket.tpartnerName}', 
-                            //         style: TextStyle(
-                            //           fontWeight: AppFontWeight.font3,
-                            //           // fontSize: AppFontSize.size4,
-                            //         )
-                            //       ),
-                            //     ],
-                            //   ),
-                            // ),
+                            // Partner name with fallback
                             Text.rich(
                               TextSpan(
                                 children: [
@@ -126,7 +137,9 @@ class HomeView extends GetView<HomeController> {
                                     style: TextStyle(fontWeight: AppFontWeight.font4),
                                   ),
                                   TextSpan(
-                                    text: ticket.tpartnerName ?? '',
+                                    text: ticket.tpartnerName?.isNotEmpty == true
+                                      ? ticket.tpartnerName
+                                      : 'No Partner Available',
                                     style: TextStyle(fontWeight: AppFontWeight.font3),
                                   ),
                                 ],
@@ -134,7 +147,7 @@ class HomeView extends GetView<HomeController> {
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                             ),
-                            // Text('Partner: ${ticket.tpartnerName}'),
+                            // Status with fallback
                             Container(
                               margin: const EdgeInsets.only(top: 4),
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -143,7 +156,7 @@ class HomeView extends GetView<HomeController> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                'Status: ${ticket.state}',
+                                'Status: ${ticket.state?.isNotEmpty == true ? ticket.state : "No Status Available"}',
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 style: TextStyle(
@@ -250,7 +263,7 @@ class HomeView extends GetView<HomeController> {
               },
               child: Icon(
                 Icons.person_2_rounded,
-                color: AppColorList.AppTextColor,
+                color: AppColorList.WhiteText,
                 size: 32, // <-- increase this value for a bigger icon
               ),
             ),
@@ -263,7 +276,8 @@ class HomeView extends GetView<HomeController> {
 }
 
 
-Color _getStatusColor(String status) {
+Color _getStatusColor(String? status) {
+  if (status == null || status.isEmpty) return Colors.grey;
   switch (status.toLowerCase()) {
     case 'open':
       return Colors.green;
