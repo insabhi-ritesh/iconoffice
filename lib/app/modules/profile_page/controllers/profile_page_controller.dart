@@ -29,10 +29,8 @@ class ProfilePageController extends GetxController {
     try {
       var response = await http.get(
         Uri.parse('${Constant.BASE_URL}${ApiEndPoints.USER_PROFILE_API}?partner_id=$partnerId'),
-        // body: {
-        //   'partner_id': partnerId.toString()
-        // },
-      );
+      ).timeout(Duration(seconds: 10));
+
 
       log(response.body);
       if (response.statusCode == 200) {

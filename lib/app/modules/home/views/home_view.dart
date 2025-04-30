@@ -15,29 +15,64 @@ class HomeView extends GetView<HomeController> {
       builder: (controller) {
         return Scaffold(
           // backgroundColor: AppColorList.AppColor,
+          // appBar: AppBar(
+          //   title: Container(
+          //     padding: EdgeInsets.all(16.0),
+          //     decoration: BoxDecoration(
+          //         color: AppColorList.AppButtonColor,
+          //         borderRadius: const BorderRadius.only(
+          //           bottomLeft: Radius.circular(20),
+          //           bottomRight: Radius.circular(20),
+          //         ),
+          //       ),
+          //     child: Text('Ticket List',
+          //       style: TextStyle(
+          //         color: AppColorList.WhiteText,
+          //       ),
+          //     ),
+          //   ),
+          //   backgroundColor: AppColorList.AppButtonColor,
+          //   centerTitle: true,
+          //   actions: [
+          //     IconButton(
+          //       icon:  Icon(Icons.notification_important_sharp,
+          //         color: AppColorList.WhiteText,
+          //       ),
+          //       onPressed: () {
+          //         Get.toNamed(Routes.NOTIFY_PAGE);
+          //       },
+          //     ),
+          //   ],
+          // ),
+
           appBar: AppBar(
+            backgroundColor: AppColorList.AppButtonColor,
+            elevation: 0,
+            // leading: IconButton(
+            //   icon: const Icon(Icons.arrow_back, color: Colors.white),
+            //   onPressed: () => Get.back(),
+            // ),
             title: Container(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                  color: AppColorList.AppButtonColor,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
-                  ),
+                color: AppColorList.AppButtonColor,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
                 ),
-              child: Text('Ticket List',
+              ),
+              child: Text(
+                'Ticket List',
                 style: TextStyle(
                   color: AppColorList.WhiteText,
                 ),
               ),
             ),
-            backgroundColor: AppColorList.AppButtonColor,
             centerTitle: true,
+            // Uncomment actions if needed
             actions: [
               IconButton(
-                icon:  Icon(Icons.notification_important_sharp,
-                  color: AppColorList.WhiteText,
-                ),
+                icon: Icon(Icons.notification_important_sharp, color: AppColorList.WhiteText),
                 onPressed: () {
                   Get.toNamed(Routes.NOTIFY_PAGE);
                 },

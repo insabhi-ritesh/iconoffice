@@ -15,54 +15,92 @@ class ProfilePageView extends GetView<ProfilePageController> {
   @override
   Widget build(BuildContext context) {
     final logController = Get.find<HomeController>();
-    return Obx(() {
-      if (controller.user.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
-      }
+    return Scaffold(            
+      appBar: AppBar(
+        backgroundColor: AppColorList.AppButtonColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
+        title: Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: AppColorList.AppButtonColor,
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+          ),
+          child: Text(
+            'Personal Information',
+            style: TextStyle(
+              color: AppColorList.WhiteText,
+            ),
+          ),
+        ),
+        // centerTitle: true,
+        // Uncomment actions if needed
+        // actions: [
+        //   IconButton(
+        //     icon: Icon(Icons.notification_important_sharp, color: AppColorList.WhiteText),
+        //     onPressed: () {
+        //       Get.toNamed(Routes.NOTIFY_PAGE);
+        //     },
+        //   ),
+        // ],
+      ),
 
-      final resUser = controller.user.first;
-      Uint8List? imageBytes;
-      if (resUser.image.isNotEmpty) {
-        try {
-          imageBytes = base64Decode(resUser.image);
-        } catch (_) {
-          imageBytes = null;
-        }
-      }
+      body: Container(
+        color: AppColorList.AppButtonColor,
+        child: Obx(() {
+          if (controller.user.isEmpty) {
+            return const SafeArea(
+              // child: Center(child: CircularProgressIndicator()),
+              child: Text("Sorry, unable to retrieve the profile data.",),
+            );
+          }
 
-      return Scaffold(
-        body: Container(
-          color: AppColorList.AppButtonColor,
-          child: SafeArea(
+          final resUser = controller.user.first;
+          Uint8List? imageBytes;
+          if (resUser.image.isNotEmpty) {
+            try {
+              imageBytes = base64Decode(resUser.image);
+            } catch (_) {
+              imageBytes = null;
+            }
+          }
+
+          return SafeArea(
             child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: AppColorList.AppButtonColor,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () => Get.back(),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        resUser.name,
-                        style: TextStyle(
-                          fontSize: AppFontSize.size1,
-                          fontWeight: AppFontWeight.font3,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                // Container(
+                //   padding: const EdgeInsets.all(16.0),
+                //   decoration: BoxDecoration(
+                //     color: AppColorList.AppButtonColor,
+                //     borderRadius: const BorderRadius.only(
+                //       bottomLeft: Radius.circular(20),
+                //       bottomRight: Radius.circular(20),
+                //     ),
+                //   ),
+                //   child: Row(
+                //     children: [
+                //       IconButton(
+                //         icon: const Icon(Icons.arrow_back, color: Colors.white),
+                //         onPressed: () => Get.back(),
+                //       ),
+                //       const SizedBox(width: 8),
+                //       Text(
+                //         resUser.name,
+                //         style: TextStyle(
+                //           fontSize: AppFontSize.size1,
+                //           fontWeight: AppFontWeight.font3,
+                //           color: Colors.white,
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ),
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(16.0),
@@ -144,10 +182,10 @@ class ProfilePageView extends GetView<ProfilePageController> {
                 ),
               ],
             ),
-          ),
-        ),
-      );
-    });
+          );
+        }),
+      ),
+    );
   }
 }
 

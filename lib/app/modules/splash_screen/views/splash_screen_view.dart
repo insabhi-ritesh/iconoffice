@@ -20,11 +20,14 @@ class SplashScreenView extends GetView<SplashScreenController> {
             height: 8,
           ),
           Center(
-            child: Image.asset(
-              'assets/images/logo.jpeg',
-              height: 180,
-              width: 190,
-              alignment: Alignment.center,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(50),
+              child: Image.asset(
+                'assets/images/logo.jpeg',
+                height: 200,
+                width: 200,
+                alignment: Alignment.center,
+              ),
             ),
           ),
 
