@@ -1,4 +1,4 @@
-package com.example.insabhi_icon_office
+package com.insabhi_icon_office.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,6 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:insabhi_icon_office/app/Constants/constant.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../common/app_color.dart';
 import '../../home/views/components/priority.dart';
 import '../controllers/ticket_detail_page_controller.dart';
@@ -171,6 +174,42 @@ class TicketDetailPageView extends StatelessWidget {
                         : const ListTile(title: Text('No Resolution Information')),
                   ),
 
+                 sectionBox(
+                  'Document attachments',
+                  (ticket.pdfDocuments != null && ticket.pdfDocuments.isNotEmpty)
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: ticket.pdfDocuments.map((pdfDoc) {
+                            return ListTile(
+                              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                              title: Text(pdfDoc.name),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.open_in_new),
+                                onPressed: () {
+                                  // You can use url_launcher or any PDF viewer package
+                                  // For url_launcher:
+                                  // launch('https://yourdomain.com${pdfDoc.url}');
+                                  // Or use Get.toNamed or any navigation to a PDF viewer page
+                                  // Example:
+                                  Get.to(() => PdfViewerPage(url: pdfDoc.url, name: pdfDoc.name));
+                                },
+                              ),
+                              onTap: () async {
+                                final url = '${Constant.BASE_URL}${pdfDoc.url}';
+                                // if (await canLaunchUrl(Uri. parse(url))) {
+                                  await launchUrl(Uri.parse(url));
+                                // } else {
+                                //   // Optionally show an error message
+                                //   ScaffoldMessenger.of(context).showSnackBar(
+                                //     SnackBar(content: Text('Could not open PDF')),
+                                //   );
+                                // }
+                              },
+                            );
+                          }).toList(),
+                        )
+                      : const ListTile(title: Text('No Document Attachments')),
+                ),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -226,6 +265,28 @@ class TicketDetailPageView extends StatelessWidget {
         ),
         children: [content],
       ),
+    );
+  }
+}
+
+
+
+class PdfViewerPage extends StatelessWidget {
+  final String url;
+  final String name;
+
+  const PdfViewerPage({Key? key, required this.url, required this.name}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // If url is relative, prepend BASE_URL
+    final fullUrl = url.startsWith('http') ? url : '${Constant.BASE_URL}$url';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(name),
+      ),
+      body: SfPdfViewer.network(fullUrl),
     );
   }
 }

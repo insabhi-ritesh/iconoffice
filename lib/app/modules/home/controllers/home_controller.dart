@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:insabhi_icon_office/app/Constants/constant.dart';
 import 'package:http/http.dart' as http;
+import 'package:insabhi_icon_office/app/Constants/firebase_api.dart';
 import 'package:insabhi_icon_office/app/models/ticket_details.dart';
 import '../../../common/pagination.dart';
 import '../../../routes/app_pages.dart';
@@ -93,5 +94,6 @@ class HomeController extends GetxController {
   Future<void> logout() async {
     await GetStorage().erase();
     Get.offAllNamed(Routes.LOGIN_PAGE);
+    await FirebaseApi().startNotification();
   }
 }

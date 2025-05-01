@@ -58,6 +58,7 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
         if (res["success"] == true) {
+          await sendToken();
           isLoading.value = false;
           var name = res["data"]["name"];
           var login = res["data"]["login"];
@@ -76,6 +77,7 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
           }
           
           box.write('partnerId', partnerId);
+          int id = box.read('partnerId');
           var print = box.read('isLogged');
           log("Permit list: $print");
           Get.snackbar('Success', 'Login successful!');
@@ -97,10 +99,34 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
     }
   }
 
-    Future<void> logout () async {
-      await GetStorage().erase();
+  Future<void> sendToken() async {
+    final token = box.read('Token');
+    final partnerId = box.read('partnerId');
 
-      Get.offAllNamed(Routes.LOGIN_PAGE);
+    if (token == null || partnerId == null) {
+      log('Token or partner_id is null, skipping sendToken.');
+      return;
     }
+
+    final url = '${Constant.BASE_URL}${ApiEndPoints.SAVE_TOKEN}?partner_id=$partnerId&token=$token';
+    log(url);
+
+    try {
+      final response = await http.post(Uri.parse(url));
+      log(response.body);
+
+      if(response.statusCode == 200) {
+        log('This is the response code: $response');
+      }
+    } catch (e) {
+      log('sendToken error: $e');
+    }
+  }
+
+  Future<void> logout () async {
+    await GetStorage().erase();
+
+    Get.offAllNamed(Routes.LOGIN_PAGE);
+  }
 
 }

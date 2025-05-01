@@ -23,6 +23,44 @@
           "other_platform_oauth_client": []
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:981787185283:android:c80a2fdeb1db3ca40d0bb6",
+        "android_client_info": {
+          "package_name": "com.insabhi_icon_office.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlSSMMvxLdF23iV-EvZhBh42EVlZlfgNU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:981787185283:android:7a0efc5dd2ba52800d0bb6",
+        "android_client_info": {
+          "package_name": "insabhi.com.new_aug_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlSSMMvxLdF23iV-EvZhBh42EVlZlfgNU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"

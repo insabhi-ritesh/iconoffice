@@ -8,8 +8,8 @@ import '../routes/app_pages.dart';
 class Constant {
   static OdooClient? odooRpc;
   //-----------Live Url------//
-  static String BASE_URL = 'http://45.124.52.122:8069';
-  // static String BASE_URL = 'http://192.168.0.110:8017';
+  // static String BASE_URL = 'http://45.124.52.122:8069';
+  static String BASE_URL = 'http://192.168.0.110:8017';
 
   static String odooUrl = BASE_URL;
 }
@@ -20,6 +20,7 @@ class ApiEndPoints {
   static String RESET_PASSWORD = '/api/app/reset_password';
   static String UPDATE_PASSWORD = '/mobile/update/password';
   static String GET_TICKET_DATA = '/api/app/helpdesk/tickets';
+  static String SAVE_TOKEN = '/api/save/device/token';
 }
 
 void signOut({String? message}) async {

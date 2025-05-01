@@ -25,15 +25,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -53,11 +47,12 @@ class DefaultFirebaseOptions {
     projectId: 'insabhi-icon-office',
     authDomain: 'insabhi-icon-office.firebaseapp.com',
     storageBucket: 'insabhi-icon-office.firebasestorage.app',
+    measurementId: 'G-LB8R3BJ7DZ',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBlSSMMvxLdF23iV-EvZhBh42EVlZlfgNU',
-    appId: '1:981787185283:android:e66e2f574006a2050d0bb6',
+    appId: '1:981787185283:android:c80a2fdeb1db3ca40d0bb6',
     messagingSenderId: '981787185283',
     projectId: 'insabhi-icon-office',
     storageBucket: 'insabhi-icon-office.firebasestorage.app',
@@ -71,4 +66,24 @@ class DefaultFirebaseOptions {
     storageBucket: 'insabhi-icon-office.firebasestorage.app',
     iosBundleId: 'com.example.insabhiIconOffice',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyCfO1jZb93dUpOzBxt2BOEDsWVGcNoi4r4',
+    appId: '1:981787185283:ios:610f33b22a841b9d0d0bb6',
+    messagingSenderId: '981787185283',
+    projectId: 'insabhi-icon-office',
+    storageBucket: 'insabhi-icon-office.firebasestorage.app',
+    iosBundleId: 'com.example.insabhiIconOffice',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyAsSUuFvb3y9Q6kOMrjI4f8mKpDS5nCY7I',
+    appId: '1:981787185283:web:01c39e5da67c7e600d0bb6',
+    messagingSenderId: '981787185283',
+    projectId: 'insabhi-icon-office',
+    authDomain: 'insabhi-icon-office.firebaseapp.com',
+    storageBucket: 'insabhi-icon-office.firebasestorage.app',
+    measurementId: 'G-DVNQPBX2FD',
+  );
+
 }

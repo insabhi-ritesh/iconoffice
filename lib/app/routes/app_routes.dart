@@ -12,6 +12,7 @@ abstract class Routes {
   static const SPLASH_SCREEN = _Paths.SPLASH_SCREEN;
   static const INDEX = _Paths.INDEX;
   static const UPDATE_PASSWORD = _Paths.UPDATE_PASSWORD;
+  static const PDF_SIGN = _Paths.PDF_SIGN;
 }
 
 abstract class _Paths {
@@ -25,4 +26,5 @@ abstract class _Paths {
   static const SPLASH_SCREEN = '/splash-screen';
   static const INDEX = '/index';
   static const UPDATE_PASSWORD = '/update-password';
+  static const PDF_SIGN = '/pdf-sign';
 }
