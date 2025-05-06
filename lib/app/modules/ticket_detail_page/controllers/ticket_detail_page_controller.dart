@@ -19,6 +19,7 @@ class TicketDetailPageController extends GetxController {
   var ticket_details = <TicketDetail>[].obs; 
 
   late String ticketNumber;
+  var selectedState =''.obs;
 
   @override
   void onInit() {
@@ -60,6 +61,28 @@ class TicketDetailPageController extends GetxController {
       return null;
     }
   }
+
+  Future<void> updateTicketState(String ticket_number, String newState) async {
+
+    try {
+      var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.UPDATE_STATE}?ticket_no=$ticket_number&new_state=$newState');
+      final response = await http.post(URL);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success']) {
+          selectedState.value = newState;
+        } else {
+          Get.snackbar('Error', data['message'] ?? 'Something went wrong');
+        }
+      } else {
+        Get.snackbar('Error', 'Failed to update ticket state');
+      }
+    }
+    catch (e){
+      Get.snackbar('Error', 'Failed to update ticket state');
+    }
+  }
+
 
  
 
