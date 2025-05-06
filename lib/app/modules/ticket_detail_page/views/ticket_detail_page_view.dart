@@ -2,14 +2,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:insabhi_icon_office/app/Constants/constant.dart';
+import 'package:insabhi_icon_office/app/modules/pdf_sign/views/pdf_sign_view.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../common/app_color.dart';
 import '../../home/views/components/priority.dart';
 import '../controllers/ticket_detail_page_controller.dart';
+import 'ticket_details_loader/ticket_details_loader.dart';
 
 class TicketDetailPageView extends StatelessWidget {
-  const TicketDetailPageView({Key? key}) : super(key: key);
+  const TicketDetailPageView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +25,15 @@ class TicketDetailPageView extends StatelessWidget {
               ),
             ),
             backgroundColor: AppColorList.AppButtonColor,
-          ),
+            iconTheme: IconThemeData(
+              color: AppColorList.WhiteText, // <-- Set your desired color here
+            ),
+          ),  
           body: Obx(() {
             if (controller.ticket_details.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
+            //   return const Center(child: CircularProgressIndicator());
+            // } else if (controller.islo) {
+              return TicketDetailSkeleton();
             }
 
             // For now, show the first ticket
@@ -101,8 +107,8 @@ class TicketDetailPageView extends StatelessWidget {
                         ticketInfoRow('Email', ticket.temailFrom1 ?? '---'),
                         ticketInfoRow('Company', ticket.customer1 ?? '---'),
                         ticketInfoRow('Customer', ticket.tpartnerName1 ?? '---'),
-                        ticketInfoRow('Ticket Reference', ticket.tref1?.trim() ?? '---'),
-                        ticketInfoRow('Serial No', ticket.serialNo1?.trim() ?? '---'),
+                        ticketInfoRow('Ticket Reference', ticket.tref1.trim() ?? '---'),
+                        ticketInfoRow('Serial No', ticket.serialNo1.trim() ?? '---'),
                         // ticketInfoRow('Ticket Created', ticket. ?? '---'),
                         // ticketInfoRow('Created By', ticket.createdBy ?? '---'),
                         ticketInfoRow('Team Leader', ticket.teamLeader1 ?? '---'),
@@ -111,7 +117,7 @@ class TicketDetailPageView extends StatelessWidget {
                         // ticketInfoRow('Close Date', ticket.cl ?? '---'),
                         // ticketInfoRow('Total Hours Spent', ticket.totalHours?.toString() ?? '---'),
                         // ticketInfoRow('Email Ticket', ticket.tem ?? '---'),
-                        ticketInfoRow('Is Ticket Closed', (ticket.state1?.toLowerCase() == 'closed') ? 'Yes' : 'No'),
+                        ticketInfoRow('Is Ticket Closed', (ticket.state1.toLowerCase() == 'closed') ? 'Yes' : 'No'),
                         ticketInfoRow('Fault Area', ticket.faultArea1 ?? '---'),
                       ],
                     ),
@@ -123,14 +129,14 @@ class TicketDetailPageView extends StatelessWidget {
                   // === Expandable Sections ===
                   sectionBox(
                     'Spare Parts',
-                    (ticket.spareParts1 != null && ticket.spareParts1!.isNotEmpty)
+                    (ticket.spareParts1.isNotEmpty)
                         ? ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: ticket.spareParts1!.length,
+                            itemCount: ticket.spareParts1.length,
                             itemBuilder: (context, index) {
                               return ListTile(
-                                title: Text(ticket.spareParts1![index].toString()),
+                                title: Text(ticket.spareParts1[index].toString()),
                               );
                             },
                           )
@@ -139,11 +145,11 @@ class TicketDetailPageView extends StatelessWidget {
 
                   sectionBox(
                     'Timesheet',
-                    (ticket.timesheets1 != null && ticket.timesheets1!.isNotEmpty)
+                    (ticket.timesheets1.isNotEmpty)
                         ? ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: ticket.timesheets1!.length,
+                            itemCount: ticket.timesheets1.length,
                             itemBuilder: (context, index) {
                               final timesheet = ticket.timesheets1[index];
                               return ListTile(
@@ -162,21 +168,21 @@ class TicketDetailPageView extends StatelessWidget {
 
                   sectionBox(
                     'Ticket Email Detail',
-                    (ticket.temailFrom1 != null && ticket.temailFrom1!.isNotEmpty)
-                        ? ListTile(title: Text(ticket.temailFrom1!))
+                    (ticket.temailFrom1.isNotEmpty)
+                        ? ListTile(title: Text(ticket.temailFrom1))
                         : const ListTile(title: Text('No Email Details Available')),
                   ),
 
                   sectionBox(
                     'Resolution',
-                    (ticket.resolution1 != null && ticket.resolution1!.isNotEmpty)
-                        ? ListTile(title: Text(ticket.resolution1!))
+                    (ticket.resolution1.isNotEmpty)
+                        ? ListTile(title: Text(ticket.resolution1))
                         : const ListTile(title: Text('No Resolution Information')),
                   ),
 
                  sectionBox(
                   'Document attachments',
-                  (ticket.pdfDocuments != null && ticket.pdfDocuments.isNotEmpty)
+                  (ticket.pdfDocuments.isNotEmpty)
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: ticket.pdfDocuments.map((pdfDoc) {
@@ -186,30 +192,23 @@ class TicketDetailPageView extends StatelessWidget {
                               trailing: IconButton(
                                 icon: const Icon(Icons.open_in_new),
                                 onPressed: () {
-                                  // You can use url_launcher or any PDF viewer package
-                                  // For url_launcher:
-                                  // launch('https://yourdomain.com${pdfDoc.url}');
-                                  // Or use Get.toNamed or any navigation to a PDF viewer page
-                                  // Example:
-                                  Get.to(() => PdfViewerPage(url: pdfDoc.url, name: pdfDoc.name));
+                                  final url = '${Constant.BASE_URL}${pdfDoc.url}';
+                                  Get.to(() => PdfViewerPage(url: url, name: pdfDoc.name));
                                 },
                               ),
                               onTap: () async {
                                 final url = '${Constant.BASE_URL}${pdfDoc.url}';
-                                // if (await canLaunchUrl(Uri. parse(url))) {
-                                  await launchUrl(Uri.parse(url));
-                                // } else {
-                                //   // Optionally show an error message
-                                //   ScaffoldMessenger.of(context).showSnackBar(
-                                //     SnackBar(content: Text('Could not open PDF')),
-                                //   );
-                                // }
+                                final fileName = pdfDoc.name.replaceAll(' ', '_');
+                                final localPath = await controller.downloadPdf(url, fileName, context);
+                                if (localPath != null) {
+                                  Get.to(() => PdfSignView(), arguments: {'pdfPath': localPath, 'pdfName': pdfDoc.name, 'ticketNumber':ticket.ticketNo1});
+                                }
                               },
                             );
                           }).toList(),
                         )
                       : const ListTile(title: Text('No Document Attachments')),
-                ),
+                  ),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -275,7 +274,7 @@ class PdfViewerPage extends StatelessWidget {
   final String url;
   final String name;
 
-  const PdfViewerPage({Key? key, required this.url, required this.name}) : super(key: key);
+  const PdfViewerPage({super.key, required this.url, required this.name});
 
   @override
   Widget build(BuildContext context) {

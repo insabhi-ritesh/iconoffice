@@ -47,7 +47,7 @@ class Ticket {
       priority: json['priority'] != false && json['priority'] != null ?json['priority'] : '',
       ticketTitle: json['ticket_title'] != false && json['ticket_title'] != null ?json['ticket_title'] : '',
       // assiTo: json['assi_to'] is int ? json['assi_to'] : int.tryParse(json['assi_to'].toString()) ?? 0,
-      state: json['ticket_title'] != false && json['ticket_title'] != null ?json['ticket_title'] : '',
+      state: json['state'] != false && json['state'] != null ?json['state'] : '',
       customer: json['customer'] != false && json['customer'] != null ?json['customer'] : '',
       teamLeader: json['team_leader'] != false && json['team_leader'] != null ?json['team_leader'] : '',
       temailFrom: json['temail_from'] != false && json['temail_from'] != null ?json['temail_from'] : '',

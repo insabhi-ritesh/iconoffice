@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
@@ -17,4 +16,5 @@ class AppColorList {
   static Color Star1 = Colors.green;
   static Color Star2 = Colors.yellow[700]!;
   static Color Star3 = Colors.red;
+  static const Color Warning = Color(0xFFFFC107);
 }

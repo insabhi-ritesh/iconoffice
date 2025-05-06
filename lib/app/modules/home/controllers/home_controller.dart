@@ -18,7 +18,7 @@ class HomeController extends GetxController {
 
   // Pagination state
   int currentPage = 1;
-  final int pageSize = 15; // Adjust as per your API
+  final int pageSize = 50; // Adjust as per your API
   var isLoading = false.obs;
   var isLastPage = false.obs;
 
@@ -33,13 +33,15 @@ class HomeController extends GetxController {
   }
 
   Future<void> fetchTickets({bool isRefresh = false}) async {
-    if (isLoading.value || isLastPage.value) return;
-
+    
     isLoading.value = true;
     if (isRefresh) {
       currentPage = 1;
       isLastPage.value = false;
       tickets.clear();
+    } else {
+      if (isLoading.value || isLastPage.value) return;
+
     }
 
     var partnerId = box.read('partnerId');
@@ -82,7 +84,8 @@ class HomeController extends GetxController {
   }
 
   Future<void> refreshData() async {
-    await fetchTickets(isRefresh: true);
+
+    fetchTickets(isRefresh: true,);
   }
 
   void onScrollEnd() {

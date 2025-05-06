@@ -7,7 +7,7 @@ import '../../controllers/login_page_controller.dart';
 class RememberMeCheckbox extends StatelessWidget {
   final LoginPageController controller;
 
-  const RememberMeCheckbox({Key? key, required this.controller}) : super(key: key);
+  const RememberMeCheckbox({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

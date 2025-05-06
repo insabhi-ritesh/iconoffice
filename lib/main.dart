@@ -9,13 +9,15 @@ import 'app/routes/app_pages.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
+  // final box = GetStorage();
+  // box.erase();
 
   // Push Notification
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // await Firebase.initializeApp(
+  //   options: DefaultFirebaseOptions.currentPlatform,
+  // );
 
-  await FirebaseApi().startNotification();
+  // await FirebaseApi().startNotification();
   
   runApp(
     GetMaterialApp(
