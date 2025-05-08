@@ -13,6 +13,8 @@ class TicketDetail {
   final String serialNo1;
   final String faultArea1;
   final String resolution1;
+  final String Description1;
+  final String model_number1;
   final List<SparePartDetail> spareParts1;
   final List<Timesheet> timesheets1;
   final List<PdfDocument> pdfDocuments; // <-- Added
@@ -30,7 +32,9 @@ class TicketDetail {
     required this.tref1,
     required this.serialNo1,
     required this.faultArea1,
+    required this.Description1,
     required this.resolution1,
+    required this.model_number1,
     required this.spareParts1,
     required this.timesheets1,
     this.pdfDocuments = const [], // <-- Added
@@ -63,6 +67,8 @@ class TicketDetail {
       serialNo1: json['serial_no'] != false && json['serial_no'] != null ? json['serial_no'] : '',
       faultArea1: json['fault_area'] != false && json['fault_area'] != null ? json['fault_area'] : '',
       resolution1: json['resolution'] != false && json['resolution'] != null ? json['resolution'] : '',
+      Description1: json['description'] != false && json['description'] != null ? json['description'] : '',
+      model_number1: json['model_number'] != false && json['model_number'] != null ?json['model_number'] : '',
       spareParts1: sparePartsList,
       timesheets1: timesheetList,
       pdfDocuments: pdfDocsList, // <-- Added
@@ -109,10 +115,10 @@ class Timesheet {
 
   factory Timesheet.fromJson(Map<String, dynamic> json) {
     return Timesheet(
-      timesheetDate: json['timesheet_date'] ?? '',
+      timesheetDate: json['timesheet_date'] != false && json['timesheet_date'] != null ? json['timesheet_date'] : '',
       users: json['users'] is int ? json['users'] : int.tryParse(json['users'].toString()) ?? 0,
       productId: json['product_id'] != false && json['product_id'] != null ? json['product_id'] : '',
-      timesheetDescription: json['timesheet_description'] ?? '',
+      timesheetDescription: json['timesheet_description'] != false && json['timesheet_description'] != null ? json['timesheet_description'] : '',
       hours: (json['hours'] is num)
           ? (json['hours'] as num).toDouble()
           : double.tryParse(json['hours'].toString()) ?? 0.0,
@@ -133,6 +139,24 @@ class PdfDocument {
     return PdfDocument(
       name: json['name'] ?? '',
       url: json['url'] ?? '',
+    );
+  }
+}
+
+
+class UsersList {
+  final String name;
+  final int id;
+
+  UsersList({
+    required this.name,
+    required this.id,
+  });
+
+  factory UsersList.fromJson(Map<String, dynamic> json) {
+    return UsersList(
+      name: json['name'] ?? '',
+      id: json['id'] ?? '',
     );
   }
 }
