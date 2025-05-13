@@ -18,6 +18,7 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
   late AnimationController animationController;
   late Animation<double> animation;
   var rememberMe = false.obs;
+  var Switch_page = false.obs;
 
   @override
   void onInit() {
@@ -67,12 +68,14 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
           var phone = res["data"]["phone"];
           var partnerId = res["data"]["partner_id"];
           var userId = res["data"]["user_id"];
+          bool portal_user = res["data"]["is_portal"];
           box.write('name', name);
           box.write('login', login);
           box.write('password', password);
           box.write('email', email);
           box.write('phone', phone);
           box.write('user_ID', userId);
+          box.write('is_portal_user', portal_user);
           if (remember == true){
             var isLogging = true;
             box.write('isLogged', isLogging);
@@ -84,7 +87,14 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
           log("Permit list: $print");
           Get.snackbar('Success', 'Login successful!');
           log('Login Successfully with status code: ${response.statusCode}');
-          Get.offAllNamed(Routes.HOME);
+
+          bool Switch_page = box.read('is_portal_user') ?? false;
+
+          if (Switch_page == true) {
+            Get.offAllNamed(Routes.PORTAL_VIEW);
+          }else {
+            Get.offAllNamed(Routes.HOME);
+          }
         } else {
           isLoading.value = false;
         }

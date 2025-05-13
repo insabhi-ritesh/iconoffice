@@ -1,5 +1,6 @@
 
 class TicketDetail {
+  final int ticket_id;
   final String ticketNo1;
   final String priority1;
   final String ticketTitle1;
@@ -20,6 +21,7 @@ class TicketDetail {
   final List<PdfDocument> pdfDocuments; // <-- Added
 
   TicketDetail({
+    required this.ticket_id,
     required this.ticketNo1,
     required this.priority1,
     required this.ticketTitle1,
@@ -54,6 +56,7 @@ class TicketDetail {
         .toList();
 
     return TicketDetail(
+      ticket_id: json['id'] != null && json['id'] != false ? json['id'] : 0,
       ticketNo1: json['ticket_no'] != false && json['ticket_no'] != null ? json['ticket_no'] : '',
       priority1: json['priority'] != false && json['priority'] != null ? json['priority'] : '',
       ticketTitle1: json['ticket_title'] != false && json['ticket_title'] != null ? json['ticket_title'] : '',
@@ -79,12 +82,12 @@ class TicketDetail {
 class SparePartDetail {
   final String productName1;
   final double qtyUsed1;
-  final String state1;
+  final String Partstate1;
 
   SparePartDetail({
     required this.productName1,
     required this.qtyUsed1,
-    required this.state1,
+    required this.Partstate1,
   });
 
   factory SparePartDetail.fromJson(Map<String, dynamic> json) {
@@ -93,7 +96,7 @@ class SparePartDetail {
       qtyUsed1: (json['qty_used'] is num)
           ? (json['qty_used'] as num).toDouble()
           : double.tryParse(json['qty_used'].toString()) ?? 0.0,
-      state1: json['state'] ?? '',
+      Partstate1: json['state'] ?? '',
     );
   }
 }

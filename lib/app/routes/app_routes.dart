@@ -13,6 +13,8 @@ abstract class Routes {
   static const INDEX = _Paths.INDEX;
   static const UPDATE_PASSWORD = _Paths.UPDATE_PASSWORD;
   static const PDF_SIGN = _Paths.PDF_SIGN;
+  static const PORTAL_VIEW = _Paths.PORTAL_VIEW;
+  static const PORTAL_TICKET_FORM = _Paths.PORTAL_TICKET_FORM;
 }
 
 abstract class _Paths {
@@ -27,4 +29,6 @@ abstract class _Paths {
   static const INDEX = '/index';
   static const UPDATE_PASSWORD = '/update-password';
   static const PDF_SIGN = '/pdf-sign';
+  static const PORTAL_VIEW = '/portal-view';
+  static const PORTAL_TICKET_FORM = '/portal-ticket-form';
 }

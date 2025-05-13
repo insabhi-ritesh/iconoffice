@@ -6,6 +6,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../Constants/constant.dart';
+import '../../../Constants/firebase_api.dart';
 import '../../../models/get_user_data.dart';
 import '../../../routes/app_pages.dart';
 
@@ -14,17 +15,22 @@ class ProfilePageController extends GetxController {
 
   final box = GetStorage();
   var user = <ResUser>[].obs;
+  var is_portal_user = true.obs;
 
 
   final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
+    
+    // is_portal_user.value = box.read('is_portal_user');
     GetUserProfileData();
   }
 
   Future<void> GetUserProfileData  () async {
     var partnerId =box.read('partnerId');
+    is_portal_user.value = box.read('is_portal_user') ?? false;
+    print(is_portal_user);
 
     try {
       var response = await http.get(
@@ -50,6 +56,12 @@ class ProfilePageController extends GetxController {
       log("error message: $e");
       print("Error fetching user profile data.");
     }
+  }
+
+  Future<void> logout() async {
+    await GetStorage().erase();
+    Get.offAllNamed(Routes.LOGIN_PAGE);
+    await FirebaseApi().startNotification();
   }
 
   void reDirectUpdatePassword(){

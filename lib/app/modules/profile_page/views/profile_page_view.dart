@@ -15,7 +15,7 @@ class ProfilePageView extends GetView<ProfilePageController> {
 
   @override
   Widget build(BuildContext context) {
-    final logController = Get.find<HomeController>();
+    final logController = Get.find<ProfilePageController>();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColorList.AppButtonColor,
@@ -107,12 +107,15 @@ class ProfilePageView extends GetView<ProfilePageController> {
                         label: "Phone",
                         value: resUser.phone.isEmpty ? "No phone number added" : resUser.phone,
                       ),
-                      ProfileField(
-                        icon: Icons.lock_outline,
-                        label: "Change Password",
-                        value: "********",
-                        onTap: () => Get.toNamed(Routes.UPDATE_PASSWORD),
-                      ),
+
+                      if (!controller.is_portal_user.value)...[
+                        ProfileField(
+                          icon: Icons.lock_outline,
+                          label: "Change Password",
+                          value: "********",
+                          onTap: () => Get.toNamed(Routes.UPDATE_PASSWORD),
+                        ),
+                      ],
                       const SizedBox(height: 30),
                       ElevatedButton(
                         onPressed: () => logController.logout(),
