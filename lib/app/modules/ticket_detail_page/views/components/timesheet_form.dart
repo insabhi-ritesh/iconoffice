@@ -1,0 +1,147 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../../../../common/app_color.dart';
+import '../../../../common/fontSize.dart';
+import '../../../../models/timesheet.dart';
+import '../../controllers/ticket_detail_page_controller.dart';
+import 'enabled_button.dart';
+import 'product_search_result.dart';
+import 'user_search_result.dart';
+import 'package:intl/intl.dart';
+
+Widget buildTimesheetForm(TicketDetailPageController controller, BuildContext context, String ticketNo1, String State) {
+    return Obx(() {
+      return Column(
+        children: [
+          ...controller.timesheetInputs.asMap().entries.map((entry) {
+            int index = entry.key;
+            TimesheetInput timesheet = entry.value;
+            return Card(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    TextField(
+                      onChanged: (value) => controller.searchQuery.value = value,
+                      controller: controller.productName,
+                      decoration: const InputDecoration(labelText: 'Search Product'),
+                    ),
+                    SizedBox(height: 8,),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppColorList.AppText,
+                          width: 1.0,
+                          ),
+                        borderRadius: BorderRadius.circular(16)
+
+                      ),
+                      child: buildProductSearchResults(controller),
+                    ),
+                    TextFormField(
+                      decoration: const InputDecoration(labelText: "Description"),
+                      controller: controller.productName,
+                    ),
+                    TextFormField(
+                      decoration: const InputDecoration(labelText: "Hours"),
+                      controller: controller.hours,
+                    ),
+                    TextFormField(
+                      decoration: const InputDecoration(labelText: "Resolution"),
+                      controller: controller.resolution,
+                    ),
+                    TextFormField(
+                      onChanged: (value) => controller.userQuery.value = value,
+                      decoration: const InputDecoration(labelText: "User"),
+                      controller : controller.resUser,
+                    ),
+                    SizedBox(height: 8,),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppColorList.AppText,
+                          width: 1.0,
+                          ),
+                        borderRadius: BorderRadius.circular(16)
+
+                      ),
+                      child: buildUserSearchResults(controller),
+                    ),
+                    
+                    IsEnabledButton(controller,),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Date: "),
+                        // Text(
+                        //   timesheet.date != null
+                        //       ? DateFormat('yyyy-MM-dd').format(timesheet.date!)
+                        //       : 'No date selected',
+                        //   style: const TextStyle(fontWeight: FontWeight.bold),
+                        // ),
+                        TextButton(
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: Get.context!,
+                              initialDate: timesheet.date ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2100),
+                            );
+                            if (picked != null) {
+                              controller.updateDate(picked);
+                              timesheet.date = picked;
+                              controller.update();
+                            }
+                          },
+                          child: const Text("Pick Date"),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => controller.removeTimesheet(),
+                        )
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+          controller.form.value == false ?
+          ElevatedButton(
+            onPressed: controller.addNewTimesheet,
+            style: ElevatedButton.styleFrom(
+              minimumSize: Size(MediaQuery.of(context).size.width * 0.9, 40),
+            ),
+            child: const Text(
+              "Add Timesheet Entry",
+              style: TextStyle(
+                fontSize: AppFontSize.size4,
+                fontWeight: AppFontWeight.font3,
+                color: AppColorList.AppText,
+              ),
+            ),
+          )
+          :
+          SizedBox.shrink(),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () {
+              controller.submitTimesheets(ticketNo1, controller.selectedDate.value, controller.selectedState.value);
+            },
+            style: ElevatedButton.styleFrom(
+              minimumSize: Size(MediaQuery.of(context).size.width * 0.9, 40),
+            ),
+            child: const Text(
+              "Submit All Timesheets",
+              style: TextStyle(
+                fontSize: AppFontSize.size4,
+                fontWeight: AppFontWeight.font3,
+                color: AppColorList.AppText,
+              ),
+            ),
+          ),
+        ],
+      );
+    });
+  }

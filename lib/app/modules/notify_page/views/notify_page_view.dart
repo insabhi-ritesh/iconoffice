@@ -67,7 +67,8 @@ class NotifyPageView extends GetView<NotifyPageController> {
                       return const Center(
                         child: Text(
                           'No notifications available',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: AppFontSize.size1, 
+                          fontWeight: AppFontWeight.font3),
                         ),
                       );
                     } else {

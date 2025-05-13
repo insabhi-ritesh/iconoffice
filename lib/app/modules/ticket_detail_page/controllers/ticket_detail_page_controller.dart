@@ -2,32 +2,43 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:file_picker/src/platform_file.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
+import 'package:insabhi_icon_office/app/models/messages_model.dart';
 import 'package:insabhi_icon_office/app/models/ticket_detail_data.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../Constants/constant.dart';
+import '../../../common/app_color.dart';
+import '../../../common/fontSize.dart';
 import '../../../models/timesheet.dart';
 import '../../../routes/app_pages.dart';
+
 
 class TicketDetailPageController extends GetxController with GetTickerProviderStateMixin{
   //TODO: Implement TicketDetailPageController
 
   var timesheetInputs = <TimesheetInput>[].obs;
+  var message = <HelpdeskMessage>[].obs;
   var searchQuery = ''.obs;
   var userQuery = ''.obs;
   var form = false.obs;
+  final ScrollController messageScrollController = ScrollController();
+
 
   void addNewTimesheet() {
     timesheetInputs.add(TimesheetInput(productId: '', date: DateTime.now()));
     form.value = true;
   }
 
-  void removeTimesheet(int index) {
+  void removeTimesheet() {
     form.value = false;
-    timesheetInputs.removeAt(index);
+    timesheetInputs.removeAt(0);
   }
 
   late AnimationController bounceController;
@@ -48,7 +59,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
   var resUser = TextEditingController();
   var productId = 0.obs;
   var isEnabled = false.obs;
-
+  var is_portal_user = true.obs;
   late String ticketNumber;
   var selectedState =''.obs;
   var selectedDate = Rxn<DateTime>(); // Nullable Rx<DateTime>
@@ -59,6 +70,9 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
 
   @override
   void onInit() {
+
+    is_portal_user.value = box.read('is_portal_user') ?? false;
+
      bounceController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -115,6 +129,10 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
   }
 
   Future<void> updateTicketState(String ticket_number, String newState) async {
+
+    // if (newState == 'closed'){
+    //   Get.snackbar('Warning', 'You cannot close a ticket that is not assigned to you.');
+    // }
     try {
       var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.UPDATE_STATE}?ticket_no=$ticket_number&new_state=$newState');
       log('Update the ticket state: $URL');
@@ -124,7 +142,9 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
         final data = jsonDecode(response.body);
         if (data['success']) {
           selectedState.value = newState;
+          Get.back();
         } else {
+          showPopUp();
           Get.snackbar('Error', data['message'] ?? 'Something went wrong');
         }
       } else {
@@ -139,29 +159,54 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
   
   
   
-  Future<void> submitTimesheets(String ticketId, DateTime? date) async {
+  
+  Future<void> submitTimesheets(String ticketId, DateTime? date, String State) async {
     var ticket_id = ticketId;
     var productId = productName.text;
     var time_description = productName.text;
     var hour = hours.text;
     var user = resUser.text;
     var enable = isEnabled.value;
-    var date = selectedDate.value?.toIso8601String(); 
+    var dateStr = selectedDate.value?.toIso8601String();
     var id = productId;
+
+    if (State == 'closed') {
+      Get.snackbar('Error', 'Cannot able to create the timesheet for closed ticket');
+      log("Ticket is closed $State");
+      return;
+    }
     try {
-      var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.CREATE_HELPDESK_TIME_SHEET}?ticket=$ticket_id&product=$productId&descrip=$time_description&hours=$hour&date=$date&user=$user&enable=$enable&id=$id');
+      var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.CREATE_HELPDESK_TIME_SHEET}');
+      final body = {
+        'ticket': ticket_id,
+        'product': productId,
+        'descrip': time_description,
+        'hours': hour,
+        'date': dateStr,
+        'user': user,
+        'enable': enable,
+        'id': id,
+      };
+
       log("Create timesheet: $URL");
+      log("Request body: $body");
 
       var res = await http.post(
-        URL
+        URL,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
       );
 
       log(res.body);
       if (res.statusCode == 200) {
+        await GetTicketData(ticketNumber);
         final data = jsonDecode(res.body);
-        if (data['success']) {
+        if (data['result']['success']) {
           Get.snackbar('Success', 'Timesheet submitted successfully');
-          await GetTicketData(ticketNumber);
+          _clearTimesheetForm(); // Clear the form after success
+          removeTimesheet();
         } else {
           Get.snackbar('Error', data['message'] ?? 'Something went wrong');
         }
@@ -174,6 +219,14 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     }
   }
 
+  /// Helper method to clear the timesheet form fields
+  void _clearTimesheetForm() {
+    productName.clear();
+    hours.clear();
+    resUser.clear();
+    selectedDate.value = null;
+    isEnabled.value = false;
+  }
 
 
   Future<void> getProductData (String search_product) async{
@@ -209,7 +262,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     
     try {
       var Url = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.SEARCH_USER}?query=$query');
-      log("This is the url to fetch the users data");
+      log("This is the url to fetch the users data: $Url");
       var response = await http.get(Url);
 
       log(response.body);
@@ -230,13 +283,12 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     } catch (e) {
       log("This is the error : $e");
     }
-
-
-
   }
 
   Future<void> GetTicketData  (String ticketNo) async {
     var partnerId =box.read('partnerId');
+    is_portal_user.value = box.read('is_portal_user') ?? false;
+    print(is_portal_user.value);
 
     try {
 
@@ -247,12 +299,14 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       log(response.body);
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
+        ticket_details.clear();
         // log(res);
         if (res['data'] != null) {
           for (var element in res['data']) {
             var data = TicketDetail.fromJson(element);
             ticket_details.add(data);
           }
+          await GetMessagesFromTicket(ticket_details[0].ticket_id);
         } else {
           Get.snackbar("Error", "Failed to fetch orders");
         }
@@ -263,9 +317,165 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     }
   }
 
+  Future<void> GetMessagesFromTicket (int ticket_id) async {
+    try {
+      var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.RECEIVE_MESSAGE}?ticket_id=$ticket_id');
+      log('This is the Url to fetch the messages from the ticket helpdesk: $URL');
+      var response = await http.get(URL);
+
+      log(response.body);
+      
+      if (response.statusCode == 200){
+        
+        message.clear();
+        var res = jsonDecode(response.body);
+        if (res['data'] != null) {
+          for (var element in res['data']) {
+            var data = HelpdeskMessage.fromJson(element);
+            message.add(data);
+          }
+        }
+      }
+    } catch (e){
+      log("error message: $e");
+      Get.snackbar("Update", 'No messages available');
+    }
+  }
+
+  Future<void> sendMessage(int ticket_id, String text, {required List<PlatformFile> files}) async {
+    var partnerId = box.read('partnerId');
+    var author_name = box.read('name');
+    try {
+      var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.SEND_MESSAGE}');
+
+      var request = http.MultipartRequest('POST', URL);
+
+      // Add fields
+      request.fields['ticket_id'] = ticket_id.toString();
+      request.fields['partner_id'] = partnerId?.toString() ?? '';
+      request.fields['name'] = author_name?.toString() ?? '';
+      request.fields['message'] = text;
+
+      // Add files
+      for (var file in files) {
+        if (file.path != null) {
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              'documents', // backend field name
+              file.path!,
+              filename: file.name,
+            ),
+          );
+        }
+      }
+
+      log("Sending message with files to: $URL");
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      log(response.body);
+
+      if (response.statusCode == 200) {
+        await GetMessagesFromTicket(ticket_id);
+        await GetTicketData(ticketNumber);
+        // Get.snackbar("Success", "Message sent successfully");
+      } else {
+        Get.snackbar("Error", "Failed to send message: ${response.statusCode}");
+      }
+    } catch (e) {
+      log("error message: $e");
+      Get.snackbar("Error", "Failed to send message");
+    }
+  }
+
+  Future<void> refreshData (String ticketNo) async{
+    await GetTicketData(ticketNo);
+  }
+
+  String parseHtmlString(String htmlString) {
+    final document = html_parser.parse(htmlString);
+    return document.body?.text ?? '';
+  }
+
+  void scrollToBottom() {
+    if (messageScrollController.hasClients) {
+      messageScrollController.animateTo(
+        messageScrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   @override
   void onClose() {
     bounceController.dispose();
     super.onClose();
+  }
+
+  void showPopUp() {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Image at the top
+            // SizedBox(
+            //   height: 200,
+            //   width: 200,
+            //   child: SvgPicture.asset(
+            //     'assets/icons/Group.svg', 
+            //     height: 80,
+            //     fit: BoxFit.contain,
+            //   ),
+            // ),
+            // const SizedBox(height: 16),
+
+            // Title and message
+            const Text(
+              'Error',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: AppFontSize.size2, fontWeight: AppFontWeight.font3,),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Please fill the timesheet.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: AppFontSize.size3,
+              fontWeight: AppFontWeight.font3),
+              
+            ),
+
+            const SizedBox(height: 20),
+
+            // Loader at the bottom
+            LoadingAnimationWidget.fourRotatingDots(
+              color: AppColorList.AppColor, size: AppFontSize.sizeLarge
+            ),
+            // ElevatedButton(onPressed: (){
+            //     Get.back();
+            //   }, child: 
+            //     Text('Go Back',
+            //       style: TextStyle(
+            //         fontSize: AppFontSize.size3,
+            //         fontWeight: AppFontWeight.font3,
+            //         color: AppColorList.AppText
+            //       ),
+            //     )
+            //   )
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    Future.delayed(const Duration(seconds: 5), () {
+      // if (Get.isDialogOpen ?? false) {
+        Get.back();
+      // }
+      // Get.offAllNamed(Routes.PORTAL_VIEW);
+    });
   }
 }

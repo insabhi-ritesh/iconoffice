@@ -8,8 +8,8 @@ import '../routes/app_pages.dart';
 class Constant {
   static OdooClient? odooRpc;
   //-----------Live Url------//
-  static String BASE_URL = 'http://45.124.52.122:8069';
-  // static String BASE_URL = 'http://192.168.0.111:8017';
+  // static String BASE_URL = 'http://45.124.52.122:8069';
+  static String BASE_URL = 'http://192.168.0.111:8017';
   // static String BASE_URL = 'http://192.168.0.166:7099';
 
   static String odooUrl = BASE_URL;
@@ -28,6 +28,9 @@ class ApiEndPoints {
   static const String UPDATE_STATE = '/api/app/helpdesk/update_state';
   static const String SEARCH_USER = '/api/app/helpdesk/search_user';
   static const String CREATE_HELPDESK_TIME_SHEET = '/api/app/helpdesk/timesheet';
+  static const String SEND_MESSAGE = '/app/api/helpdesk/send_message';
+  static const String RECEIVE_MESSAGE = '/app/api/helpdesk/receive_message';
+  static const String CREATE_HELPDESK_TICKET = '/api/app/helpdesk/ticket/create';
 }
 
 void signOut({String? message}) async {

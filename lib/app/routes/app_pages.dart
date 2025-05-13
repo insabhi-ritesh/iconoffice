@@ -10,6 +10,10 @@ import '../modules/notify_page/bindings/notify_page_binding.dart';
 import '../modules/notify_page/views/notify_page_view.dart';
 import '../modules/pdf_sign/bindings/pdf_sign_binding.dart';
 import '../modules/pdf_sign/views/pdf_sign_view.dart';
+import '../modules/portal_ticket_form/bindings/portal_ticket_form_binding.dart';
+import '../modules/portal_ticket_form/views/portal_ticket_form_view.dart';
+import '../modules/portal_view/bindings/portal_view_binding.dart';
+import '../modules/portal_view/views/portal_view_view.dart';
 import '../modules/profile_page/bindings/profile_page_binding.dart';
 import '../modules/profile_page/views/profile_page_view.dart';
 import '../modules/splash_screen/bindings/splash_screen_binding.dart';
@@ -78,6 +82,16 @@ class AppPages {
       name: _Paths.PDF_SIGN,
       page: () => const PdfSignView(),
       binding: PdfSignBinding(),
+    ),
+    GetPage(
+      name: _Paths.PORTAL_VIEW,
+      page: () => const PortalViewView(),
+      binding: PortalViewBinding(),
+    ),
+    GetPage(
+      name: _Paths.PORTAL_TICKET_FORM,
+      page: () => PortalTicketFormView(),
+      binding: PortalTicketFormBinding(),
     ),
   ];
 }

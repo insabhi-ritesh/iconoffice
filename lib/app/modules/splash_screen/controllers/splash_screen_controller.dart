@@ -7,6 +7,7 @@ class SplashScreenController extends GetxController {
 
   final box = GetStorage();
   var isLogged = false.obs;
+  var portal_user = false.obs;
 
   @override
   void onInit() {
@@ -19,13 +20,22 @@ class SplashScreenController extends GetxController {
     });
   }
 
-  void navigateToNextScreen (){
-    isLogged.value = box.read('isLogged') ?? false;
+    
+  void navigateToNextScreen() {
+    final bool isLoggedIn = box.read('isLogged') ?? false;
+    final bool isPortalUser = box.read('is_portal_user') ?? false;
 
-    if (isLogged.value) {
-      Get.offAllNamed(Routes.HOME);
-    } else {
-      Get.offAllNamed(Routes.LOGIN_PAGE);
+    isLogged.value = isLoggedIn;
+    portal_user.value = isPortalUser;
+
+    if (isLoggedIn && isPortalUser) {
+      Get.offAllNamed(Routes.PORTAL_VIEW);
+      return;
     }
+    if (isLoggedIn && !isPortalUser) {
+      Get.offAllNamed(Routes.HOME);
+      return;
+    }
+    Get.offAllNamed(Routes.LOGIN_PAGE);
   }
 }
