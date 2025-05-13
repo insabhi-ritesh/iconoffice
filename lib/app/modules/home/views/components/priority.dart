@@ -5,7 +5,7 @@ import 'package:insabhi_icon_office/app/common/app_color.dart';
 class PriorityStars extends StatelessWidget {
   final int priority; 
 
-  const PriorityStars({Key? key, required this.priority}) : super(key: key);
+  const PriorityStars({super.key, required this.priority});
 
   Color _getStarColor(int clampedPriority) {
     switch (clampedPriority) {

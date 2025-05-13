@@ -9,7 +9,7 @@ import '../controllers/index_controller.dart';
 
 
 class IndexView extends StatefulWidget {
-  const IndexView({Key? key}) : super(key: key);
+  const IndexView({super.key});
 
   @override
   State<IndexView> createState() => _IndexViewState();
@@ -89,12 +89,12 @@ class _IndexViewState extends State<IndexView> with WidgetsBindingObserver {
 
 class MenuItem extends StatelessWidget {
   const MenuItem({
-    Key? key,
+    super.key,
     required this.svgUrl,
     required this.label,
     required this.isSelected,
     this.background = false,
-  }) : super(key: key);
+  });
 
   final String svgUrl, label;
   final bool isSelected, background;

@@ -66,11 +66,13 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
           var email = res["data"]["email"];
           var phone = res["data"]["phone"];
           var partnerId = res["data"]["partner_id"];
+          var userId = res["data"]["user_id"];
           box.write('name', name);
           box.write('login', login);
           box.write('password', password);
           box.write('email', email);
           box.write('phone', phone);
+          box.write('user_ID', userId);
           if (remember == true){
             var isLogging = true;
             box.write('isLogged', isLogging);

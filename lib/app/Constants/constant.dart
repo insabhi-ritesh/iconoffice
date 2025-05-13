@@ -8,19 +8,26 @@ import '../routes/app_pages.dart';
 class Constant {
   static OdooClient? odooRpc;
   //-----------Live Url------//
-  // static String BASE_URL = 'http://45.124.52.122:8069';
-  static String BASE_URL = 'http://192.168.0.110:8017';
+  static String BASE_URL = 'http://45.124.52.122:8069';
+  // static String BASE_URL = 'http://192.168.0.111:8017';
+  // static String BASE_URL = 'http://192.168.0.166:7099';
 
   static String odooUrl = BASE_URL;
 }
 
 class ApiEndPoints {
-  static String LOGIN_API = '/api/app/login';
-  static String USER_PROFILE_API = '/api/app/profile';
-  static String RESET_PASSWORD = '/api/app/reset_password';
-  static String UPDATE_PASSWORD = '/mobile/update/password';
-  static String GET_TICKET_DATA = '/api/app/helpdesk/tickets';
-  static String SAVE_TOKEN = '/api/save/device/token';
+  static const String LOGIN_API = '/api/app/login';
+  static const String USER_PROFILE_API = '/api/app/profile';
+  static const String RESET_PASSWORD = '/api/app/reset_password';
+  static const String UPDATE_PASSWORD = '/mobile/update/password';
+  static const String GET_TICKET_DATA = '/api/app/helpdesk/tickets';
+  static const String SAVE_TOKEN = '/api/save/device/token';
+  static const String UPLOAD_PDF = '/api/app/helpdesk/upload_signed_pdf';
+  static const String GET_NOTIFICATION = '/api/app/get-notifications';
+  static const String GET_SEARCH_PRODUCT = '/api/app/helpdesk/search_product';
+  static const String UPDATE_STATE = '/api/app/helpdesk/update_state';
+  static const String SEARCH_USER = '/api/app/helpdesk/search_user';
+  static const String CREATE_HELPDESK_TIME_SHEET = '/api/app/helpdesk/timesheet';
 }
 
 void signOut({String? message}) async {

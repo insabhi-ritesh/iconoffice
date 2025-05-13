@@ -4,6 +4,7 @@ import 'package:insabhi_icon_office/app/common/app_color.dart';
 import 'package:insabhi_icon_office/app/common/fontSize.dart';
 import 'package:insabhi_icon_office/app/modules/home/views/components/priority.dart';
 import '../controllers/notify_page_controller.dart';
+import 'components/notify_loader.dart';
 
 class NotifyPageView extends GetView<NotifyPageController> {
   const NotifyPageView({super.key});
@@ -61,7 +62,7 @@ class NotifyPageView extends GetView<NotifyPageController> {
                   ),
                   child: Obx(() {
                     if (controller.isLoading.value) {
-                      return const Center(child: CircularProgressIndicator());
+                      return NotifySkeletonLoader();
                     } else if (controller.notifications.isEmpty) {
                       return const Center(
                         child: Text(

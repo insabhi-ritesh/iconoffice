@@ -12,6 +12,8 @@ class Ticket {
   final String serialNo;
   final String faultArea;
   final String resolution;
+  final String Description;
+  final String model_number;
   final List<SparePart> spareParts;
   final List<Timesheet> timesheets;
 
@@ -31,6 +33,8 @@ class Ticket {
     required this.resolution,
     required this.spareParts,
     required this.timesheets,
+    required this.Description,
+    required this.model_number,
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
@@ -47,7 +51,7 @@ class Ticket {
       priority: json['priority'] != false && json['priority'] != null ?json['priority'] : '',
       ticketTitle: json['ticket_title'] != false && json['ticket_title'] != null ?json['ticket_title'] : '',
       // assiTo: json['assi_to'] is int ? json['assi_to'] : int.tryParse(json['assi_to'].toString()) ?? 0,
-      state: json['ticket_title'] != false && json['ticket_title'] != null ?json['ticket_title'] : '',
+      state: json['state'] != false && json['state'] != null ?json['state'] : '',
       customer: json['customer'] != false && json['customer'] != null ?json['customer'] : '',
       teamLeader: json['team_leader'] != false && json['team_leader'] != null ?json['team_leader'] : '',
       temailFrom: json['temail_from'] != false && json['temail_from'] != null ?json['temail_from'] : '',
@@ -56,6 +60,8 @@ class Ticket {
       serialNo: json['serial_no'] != false && json['serial_no'] != null ?json['serial_no'] : '',
       faultArea: json['fault_area'] != false && json['fault_area'] != null ?json['fault_area'] : '',
       resolution: json['resolution'] != false && json['resolution'] != null ?json['resolution'] : '',
+      Description: json['description'] != false && json['description'] != null ? json['description'] : '',
+      model_number: json['model_number'] != false && json['model_number'] != null ?json['model_number'] : '',
       spareParts: sparePartsList,
       timesheets: timesheetList,
     );
@@ -101,10 +107,10 @@ class Timesheet {
 
   factory Timesheet.fromJson(Map<String, dynamic> json) {
     return Timesheet(
-      timesheetDate: json['timesheet_date'] ?? '',
+      timesheetDate: json['timesheet_date'] != null && json['timesheet_date'] != false ? json['timesheet_date'] : '',
       users: json['users'] is int ? json['users'] : int.tryParse(json['users'].toString()) ?? 0,
       productId: json['product_id'] != false && json['product'] != null ? json['product_id'] : '',
-      timesheetDescription: json['timesheet_description'] ?? '',
+      timesheetDescription: json['timesheet_description'] != null && json['timesheet_description'] != false ? json['timesheet_description'] : '',
       hours: (json['hours'] is num)
           ? (json['hours'] as num).toDouble()
           : double.tryParse(json['hours'].toString()) ?? 0.0,

@@ -1,13 +1,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:insabhi_icon_office/app/common/app_color.dart';
-import '../../controllers/login_page_controller.dart';
+import 'package:insabhi_icon_office/app/modules/ticket_detail_page/controllers/ticket_detail_page_controller.dart';
 
-class RememberMeCheckbox extends StatelessWidget {
-  final LoginPageController controller;
+import '../../../../common/app_color.dart';
 
-  const RememberMeCheckbox({super.key, required this.controller});
+class IsEnabledButton extends StatelessWidget {
+  final TicketDetailPageController controller;
+  const IsEnabledButton(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,24 +17,23 @@ class RememberMeCheckbox extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: () {
-              controller.rememberMe.value = !controller.rememberMe.value;
+              controller.isEnabled.value = !controller.isEnabled.value;
             },
             child: Obx(() => Container(
                   height: 20,
                   width: 20,
                   decoration: BoxDecoration(
-                    color: controller.rememberMe.value ? AppColorList.AppButtonColor : AppColorList.WhiteText,
-                    // Colors.green : Colors.white,
+                    color: controller.isEnabled.value ? AppColorList.AppButtonColor : AppColorList.WhiteText,
                     border: Border.all(),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: controller.rememberMe.value
+                  child: controller.isEnabled.value
                       ? const Icon(Icons.check, color: Colors.white, size: 16)
                       : null,
                 )),
           ),
           const SizedBox(width: 10),
-          const Text('Remember me', style: TextStyle(fontSize: 16)),
+          const Text('Billable', style: TextStyle(fontSize: 16)),
         ],
       ),
     );

@@ -5,6 +5,7 @@ import '../../../common/app_color.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/home_controller.dart';
 import 'components/priority.dart';
+import 'components/ticket_list_skeleton.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -14,37 +15,6 @@ class HomeView extends GetView<HomeController> {
     return GetBuilder<HomeController>(
       builder: (controller) {
         return Scaffold(
-          // backgroundColor: AppColorList.AppColor,
-          // appBar: AppBar(
-          //   title: Container(
-          //     padding: EdgeInsets.all(16.0),
-          //     decoration: BoxDecoration(
-          //         color: AppColorList.AppButtonColor,
-          //         borderRadius: const BorderRadius.only(
-          //           bottomLeft: Radius.circular(20),
-          //           bottomRight: Radius.circular(20),
-          //         ),
-          //       ),
-          //     child: Text('Ticket List',
-          //       style: TextStyle(
-          //         color: AppColorList.WhiteText,
-          //       ),
-          //     ),
-          //   ),
-          //   backgroundColor: AppColorList.AppButtonColor,
-          //   centerTitle: true,
-          //   actions: [
-          //     IconButton(
-          //       icon:  Icon(Icons.notification_important_sharp,
-          //         color: AppColorList.WhiteText,
-          //       ),
-          //       onPressed: () {
-          //         Get.toNamed(Routes.NOTIFY_PAGE);
-          //       },
-          //     ),
-          //   ],
-          // ),
-
           appBar: AppBar(
             backgroundColor: AppColorList.AppButtonColor,
             elevation: 0,
@@ -63,9 +33,11 @@ class HomeView extends GetView<HomeController> {
               ),
               child: Text(
                 'Ticket List',
-                style: TextStyle(
-                  color: AppColorList.WhiteText,
-                ),
+                  style: TextStyle(
+                    fontSize: AppFontSize.size1,
+                    fontWeight: AppFontWeight.font3,
+                    color: Colors.white,
+                  ),
               ),
             ),
             centerTitle: true,
@@ -86,9 +58,16 @@ class HomeView extends GetView<HomeController> {
             child: Padding(
               padding: EdgeInsets.all(16.0),
               child: Obx(() {
-                if (controller.tickets.isEmpty) {
-                  return  Center(
-                    child: CircularProgressIndicator()
+                if (controller.isLoading.value) {
+                  return  TicketListSkeleton(itemCount: 5,);
+                } else if ( controller.tickets.isEmpty){
+                  return const Center(
+                    child: Text("No Data Available",
+                      style: TextStyle(
+                        fontSize: AppFontSize.size1,
+                        fontWeight: AppFontWeight.font3
+                      ),
+                    ),
                   );
                 }
                 
@@ -96,14 +75,6 @@ class HomeView extends GetView<HomeController> {
                   itemCount: controller.tickets.length,
                   itemBuilder: (context, index) {
                     final ticket = controller.tickets[index];
-                    if (ticket == null) {
-                      return const Center(
-                        child: Text(
-                          'No data available',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                      );
-                    }
                     return Card(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -153,7 +124,7 @@ class HomeView extends GetView<HomeController> {
                                     style: TextStyle(fontWeight: AppFontWeight.font4),
                                   ),
                                   TextSpan(
-                                    text: ticket.ticketTitle?.isNotEmpty == true
+                                    text: ticket.ticketTitle.isNotEmpty == true
                                       ? ticket.ticketTitle
                                       : 'No Title Available',
                                     style: TextStyle(fontWeight: AppFontWeight.font3),
@@ -172,7 +143,7 @@ class HomeView extends GetView<HomeController> {
                                     style: TextStyle(fontWeight: AppFontWeight.font4),
                                   ),
                                   TextSpan(
-                                    text: ticket.tpartnerName?.isNotEmpty == true
+                                    text: ticket.tpartnerName.isNotEmpty == true
                                       ? ticket.tpartnerName
                                       : 'No Partner Available',
                                     style: TextStyle(fontWeight: AppFontWeight.font3),
@@ -183,7 +154,7 @@ class HomeView extends GetView<HomeController> {
                               maxLines: 1,
                             ),
                             // Status with fallback
-                            Container(
+                           Container(
                               margin: const EdgeInsets.only(top: 4),
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
@@ -191,79 +162,17 @@ class HomeView extends GetView<HomeController> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                'Status: ${ticket.state?.isNotEmpty == true ? ticket.state : "No Status Available"}',
+                                'Status: ${getStatusLabel(ticket.state)}',
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 style: TextStyle(
-                                  color: _getStatusColor(ticket.state),
-                                  fontWeight: FontWeight.w500,
+                                  color: AppColorList.AppText,
+                                  fontWeight: AppFontWeight.font3,
                                 ),
                               ),
                             ),
-                          ],
-                          // children: [
-                          //   RichText(
-                          //     text: TextSpan(
-                          //       style: DefaultTextStyle.of(context).style,
-                          //       children: [
-                          //         const TextSpan(text: 'Ticket No: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                          //         TextSpan(text: '${ticket.ticketNo}'),
-                          //       ],
-                          //     ),
-                          //   ),
-                          //   RichText(
-                          //     text: TextSpan(
-                          //       style: DefaultTextStyle.of(context).style,
-                          //       children: [
-                          //         const TextSpan(text: 'Priority: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                          //         TextSpan(text: '${ticket.priority}'),
-                          //       ],
-                          //     ),
-                          //   ),
-                          //   RichText(
-                          //     text: TextSpan(
-                          //       style: DefaultTextStyle.of(context).style,
-                          //       children: [
-                          //         const TextSpan(text: 'Partner: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                          //         TextSpan(text: '${ticket.tpartnerName}'),
-                          //       ],
-                          //     ),
-                          //   ),
-                          //   RichText(
-                          //     text: TextSpan(
-                          //       style: DefaultTextStyle.of(context).style,
-                          //       children: [
-                          //         const TextSpan(text: 'Reference: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                          //         TextSpan(text: '${ticket.tref}'),
-                          //       ],
-                          //     ),
-                          //   ),
-                          //   RichText(
-                          //     text: TextSpan(
-                          //       style: DefaultTextStyle.of(context).style,
-                          //       children: [
-                          //         const TextSpan(text: 'Fault Area: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                          //         TextSpan(text: '${ticket.faultArea}'),
-                          //       ],
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     margin: const EdgeInsets.only(top: 4),
-                          //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          //     decoration: BoxDecoration(
-                          //       color: _getStatusColor(ticket.state).withOpacity(0.2),
-                          //       borderRadius: BorderRadius.circular(8),
-                          //     ),
-                          //     child: Text(
-                          //       'Status: ${ticket.state}',
-                          //       style: TextStyle(
-                          //         color: _getStatusColor(ticket.state),
-                          //         fontWeight: FontWeight.w500,
-                          //       ),
-                          //     ),
-                          //   ),
-                          // ],
 
+                          ],
                         ),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
@@ -314,13 +223,38 @@ class HomeView extends GetView<HomeController> {
 Color _getStatusColor(String? status) {
   if (status == null || status.isEmpty) return Colors.grey;
   switch (status.toLowerCase()) {
-    case 'open':
+    case 'new':
+      return Colors.blue;
+    case 'assigned':
       return Colors.green;
-    case 'in progress':
-      return Colors.orange;
-    case 'closed':
+    case 'work_in':
+      return AppColorList.Warning; // A more visible yellow
+    case 'cancel':
       return Colors.red;
     default:
       return Colors.grey;
+  }
+}
+
+String getStatusLabel(String? state) {
+  switch (state) {
+    case 'new':
+      return 'New';
+    case 'assigned':
+      return 'Assigned';
+    case 'work_in':
+      return 'Work In Progress';
+    case 'need_info':
+      return 'Need Info';
+    case 'reopened':
+      return 'Reopened';
+    case 'solution':
+      return 'Solution';
+    case 'closed':
+      return 'Closed';
+    case 'cancel':
+      return 'Cancelled';
+    default:
+      return 'No Status Available';
   }
 }
