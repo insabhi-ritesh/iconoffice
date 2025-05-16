@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:insabhi_icon_office/app/models/messages_model.dart';
 import 'package:insabhi_icon_office/app/models/ticket_detail_data.dart';
+import 'package:insabhi_icon_office/app/modules/home/controllers/home_controller.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../Constants/constant.dart';
@@ -142,7 +143,13 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
         final data = jsonDecode(response.body);
         if (data['success']) {
           selectedState.value = newState;
-          Get.back();
+          if (newState == 'closed'){
+            // Get.back();
+            // Get.find<HomeController>().fetchTickets();
+            Get.offAllNamed(Routes.HOME);
+          } else {
+            await GetTicketData(ticket_number);
+          }
         } else {
           showPopUp();
           Get.snackbar('Error', data['message'] ?? 'Something went wrong');
@@ -169,6 +176,11 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     var enable = isEnabled.value;
     var dateStr = selectedDate.value?.toIso8601String();
     var id = productId;
+
+    if (dateStr == null){
+      selectedDate.value = DateTime.now();
+      dateStr = selectedDate.value?.toIso8601String();
+    }
 
     if (State == 'closed') {
       Get.snackbar('Error', 'Cannot able to create the timesheet for closed ticket');
@@ -212,6 +224,8 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
         }
       } else {
         Get.snackbar('Error', 'Failed to submit timesheet');
+        _clearTimesheetForm(); // Clear the form after success
+          removeTimesheet();
       }
     } catch (e) {
       log("This is the error : $e");

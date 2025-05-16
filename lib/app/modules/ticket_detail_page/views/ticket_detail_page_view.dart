@@ -34,13 +34,13 @@ class TicketDetailPageView extends StatelessWidget {
     // if (!isSelected) return Colors.grey.shade300;
     switch (stateKey) {
       case 'assigned':
-        return Colors.green;
+        return AppColorList.Star1;
       case 'work_in':
-        return Colors.yellow.shade700;
+        return AppColorList.yellow_shade;
       case 'closed':
-        return Colors.red;
+        return AppColorList.Star3;
       default:
-        return Colors.blue;
+        return AppColorList.blue;
     }
   }
 

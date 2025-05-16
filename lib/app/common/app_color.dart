@@ -15,6 +15,10 @@ class AppColorList {
   static Color MainShadow = Colors.grey;
   static Color Star1 = Colors.green;
   static Color Star2 = Colors.yellow[700]!;
+  static Color Skeleton_color = Colors.grey[300]!;
+  static Color Skeleton_color1 =  Colors.grey[100]!;
   static Color Star3 = Colors.red;
+  static Color yellow_shade = Colors.yellow.shade700;
   static const Color Warning = Color(0xFFFFC107);
+  static Color blue = Colors.blue;
 }

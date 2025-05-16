@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../../../common/app_color.dart';
+
 class TicketDetailSkeleton extends StatelessWidget {
   const TicketDetailSkeleton({super.key});
 
@@ -10,7 +12,7 @@ class TicketDetailSkeleton extends StatelessWidget {
       height: height,
       width: width,
       decoration: BoxDecoration(
-        color: Colors.grey[300],
+        color: AppColorList.Skeleton_color,
         borderRadius: borderRadius ?? BorderRadius.circular(8),
       ),
     );
@@ -19,8 +21,8 @@ class TicketDetailSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: AppColorList.Skeleton_color,
+      highlightColor: AppColorList.Skeleton_color1,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -31,7 +33,7 @@ class TicketDetailSkeleton extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColorList.WhiteText,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -49,7 +51,7 @@ class TicketDetailSkeleton extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColorList.WhiteText,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -68,7 +70,7 @@ class TicketDetailSkeleton extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColorList.WhiteText,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
