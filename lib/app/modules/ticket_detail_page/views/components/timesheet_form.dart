@@ -70,16 +70,11 @@ Widget buildTimesheetForm(TicketDetailPageController controller, BuildContext co
                     ),
                     
                     IsEnabledButton(controller,),
+                    
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Date: "),
-                        // Text(
-                        //   timesheet.date != null
-                        //       ? DateFormat('yyyy-MM-dd').format(timesheet.date!)
-                        //       : 'No date selected',
-                        //   style: const TextStyle(fontWeight: FontWeight.bold),
-                        // ),
                         TextButton(
                           onPressed: () async {
                             final picked = await showDatePicker(
@@ -94,7 +89,22 @@ Widget buildTimesheetForm(TicketDetailPageController controller, BuildContext co
                               controller.update();
                             }
                           },
-                          child: const Text("Pick Date"),
+                          child: Container(
+                            width: 100,
+                            padding: const EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: AppColorList.AppText, width: 0.4),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              timesheet.date != null
+                                ? DateFormat('yyyy-MM-dd').format(timesheet.date!)
+                                : DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                              style: const TextStyle(fontWeight: AppFontWeight.font6),
+                              textAlign: TextAlign.center,
+                            ),
+                            
+                          ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
@@ -102,6 +112,7 @@ Widget buildTimesheetForm(TicketDetailPageController controller, BuildContext co
                         )
                       ],
                     )
+
                   ],
                 ),
               ),

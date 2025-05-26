@@ -1,10 +1,10 @@
+import 'dart:async' show Timer;
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:file_picker/src/platform_file.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
@@ -18,10 +18,10 @@ import '../../../common/app_color.dart';
 import '../../../common/fontSize.dart';
 import '../../../models/timesheet.dart';
 import '../../../routes/app_pages.dart';
+import '../../pdf_sign/views/pdf_viewer_page.dart';
 
 
 class TicketDetailPageController extends GetxController with GetTickerProviderStateMixin{
-  //TODO: Implement TicketDetailPageController
 
   var timesheetInputs = <TimesheetInput>[].obs;
   var message = <HelpdeskMessage>[].obs;
@@ -29,6 +29,17 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
   var userQuery = ''.obs;
   var form = false.obs;
   final ScrollController messageScrollController = ScrollController();
+
+  // Timer? _messagePollingTimer;
+
+  // ... rest of your code
+
+  // void startMessagePolling(int ticketId) {
+  //   _messagePollingTimer?.cancel();
+  //   _messagePollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+  //     GetMessagesFromTicket(ticketId);
+  //   });
+  // }
 
 
   void addNewTimesheet() {
@@ -62,7 +73,8 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
   var is_portal_user = true.obs;
   late String ticketNumber;
   var selectedState =''.obs;
-  var selectedDate = Rxn<DateTime>(); // Nullable Rx<DateTime>
+  var selectedDate = Rxn<DateTime>(); 
+  
 
   void updateDate(DateTime date) {
     selectedDate.value = date;
@@ -85,6 +97,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       parent: bounceController,
       curve: Curves.easeInOut,
     ));
+    
 
     ticketNumber = Get.arguments as String;
 
@@ -101,23 +114,19 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       final filePath = '${dir.path}/$fileName';
       final file = File(filePath);
 
-      // If file already exists, return path
       if (await file.exists()) {
         return filePath;
       }
 
-      // Show progress dialog
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
 
-      // Download file
       final dio = Dio();
       await dio.download(url, filePath);
 
-      // Hide progress dialog
       Navigator.of(context, rootNavigator: true).pop();
 
       return filePath;
@@ -130,8 +139,10 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
 
   Future<void> updateTicketState(String ticket_number, String newState) async {
 
+    //Uncomment this code if you don't want to proceed with ticket status = closed:-
     // if (newState == 'closed'){
     //   Get.snackbar('Warning', 'You cannot close a ticket that is not assigned to you.');
+    //   return;
     // }
     try {
       var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.UPDATE_STATE}?ticket_no=$ticket_number&new_state=$newState');
@@ -142,7 +153,11 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
         final data = jsonDecode(response.body);
         if (data['success']) {
           selectedState.value = newState;
-          Get.back();
+          if (newState == 'closed'){
+            Get.offAllNamed(Routes.HOME);
+          } else {
+            await GetTicketData(ticket_number);
+          }
         } else {
           showPopUp();
           Get.snackbar('Error', data['message'] ?? 'Something went wrong');
@@ -169,6 +184,11 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     var enable = isEnabled.value;
     var dateStr = selectedDate.value?.toIso8601String();
     var id = productId;
+
+    if (dateStr == null){
+      selectedDate.value = DateTime.now();
+      dateStr = selectedDate.value?.toIso8601String();
+    }
 
     if (State == 'closed') {
       Get.snackbar('Error', 'Cannot able to create the timesheet for closed ticket');
@@ -205,13 +225,15 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
         final data = jsonDecode(res.body);
         if (data['result']['success']) {
           Get.snackbar('Success', 'Timesheet submitted successfully');
-          _clearTimesheetForm(); // Clear the form after success
+          _clearTimesheetForm(); 
           removeTimesheet();
         } else {
           Get.snackbar('Error', data['message'] ?? 'Something went wrong');
         }
       } else {
         Get.snackbar('Error', 'Failed to submit timesheet');
+        _clearTimesheetForm(); 
+          removeTimesheet();
       }
     } catch (e) {
       log("This is the error : $e");
@@ -219,7 +241,6 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     }
   }
 
-  /// Helper method to clear the timesheet form fields
   void _clearTimesheetForm() {
     productName.clear();
     hours.clear();
@@ -300,13 +321,14 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
         ticket_details.clear();
-        // log(res);
         if (res['data'] != null) {
           for (var element in res['data']) {
             var data = TicketDetail.fromJson(element);
             ticket_details.add(data);
           }
           await GetMessagesFromTicket(ticket_details[0].ticket_id);
+          // Uncomment this function to get the messages from the ticket frequently.
+          // startMessagePolling(ticket_details[0].ticket_id);
         } else {
           Get.snackbar("Error", "Failed to fetch orders");
         }
@@ -350,18 +372,16 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
 
       var request = http.MultipartRequest('POST', URL);
 
-      // Add fields
       request.fields['ticket_id'] = ticket_id.toString();
       request.fields['partner_id'] = partnerId?.toString() ?? '';
       request.fields['name'] = author_name?.toString() ?? '';
       request.fields['message'] = text;
 
-      // Add files
       for (var file in files) {
         if (file.path != null) {
           request.files.add(
             await http.MultipartFile.fromPath(
-              'documents', // backend field name
+              'documents', 
               file.path!,
               filename: file.name,
             ),
@@ -378,7 +398,6 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       if (response.statusCode == 200) {
         await GetMessagesFromTicket(ticket_id);
         await GetTicketData(ticketNumber);
-        // Get.snackbar("Success", "Message sent successfully");
       } else {
         Get.snackbar("Error", "Failed to send message: ${response.statusCode}");
       }
@@ -422,19 +441,6 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Image at the top
-            // SizedBox(
-            //   height: 200,
-            //   width: 200,
-            //   child: SvgPicture.asset(
-            //     'assets/icons/Group.svg', 
-            //     height: 80,
-            //     fit: BoxFit.contain,
-            //   ),
-            // ),
-            // const SizedBox(height: 16),
-
-            // Title and message
             const Text(
               'Error',
               textAlign: TextAlign.center,
@@ -450,8 +456,6 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
             ),
 
             const SizedBox(height: 20),
-
-            // Loader at the bottom
             LoadingAnimationWidget.fourRotatingDots(
               color: AppColorList.AppColor, size: AppFontSize.sizeLarge
             ),
@@ -472,10 +476,45 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       barrierDismissible: false,
     );
     Future.delayed(const Duration(seconds: 5), () {
-      // if (Get.isDialogOpen ?? false) {
-        Get.back();
-      // }
-      // Get.offAllNamed(Routes.PORTAL_VIEW);
+      Get.back();
     });
+  }
+
+  Future<void> previewFile(BuildContext context, PlatformFile file) async {
+    final ext = file.extension?.toLowerCase();
+    if (ext == 'pdf') {
+      // For PDF, open with PdfViewerPage (local file)
+      await Get.to(() => PdfViewerPage(
+        url: file.path ?? '',
+        name: file.name,
+        // isLocal: true, // Add this param to your PdfViewerPage if needed
+      ));
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].contains(ext)) {
+      // For images, show a dialog with Image.file
+      await showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            child: Image.file(File(file.path!)),
+          ),
+        ),
+      );
+    } else {
+      // For other files, just show the name and size
+      await showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Preview Not Available'),
+          content: Text('File: ${file.name}\nSize: ${file.size} bytes'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }

@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:insabhi_icon_office/app/Constants/constant.dart';
 import 'package:insabhi_icon_office/app/modules/pdf_sign/views/pdf_sign_view.dart';
-// import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-// import 'package:url_launcher/url_launcher.dart';
 import '../../../common/app_color.dart';
-// import '../../../common/fontSize.dart';
-// import '../../home/views/components/priority.dart';
 import '../../pdf_sign/views/pdf_viewer_page.dart';
 import '../controllers/ticket_detail_page_controller.dart';
 import 'components/send_message.dart';
@@ -16,13 +12,15 @@ import 'components/ticket_info_box.dart';
 import 'components/timesheet_form.dart';
 import 'components/view_message.dart';
 import 'ticket_details_loader/ticket_details_loader.dart';
-// import 'package:intl/intl.dart';
+
 
 class TicketDetailPageView extends StatelessWidget {
-  const TicketDetailPageView({super.key});
+  TicketDetailPageView({super.key});
 
   static const List<String> stateKeys = ['assigned', 'work_in', 'closed'];
   static const List<String> stateLabels = ['Assigned', 'Work in Progress', 'Closed'];
+
+  final RxList<PlatformFile> fabSelectedFiles = <PlatformFile>[].obs;
 
   int getSelectedStateIndex(String? state) {
     if (state == null) return 0;
@@ -34,13 +32,13 @@ class TicketDetailPageView extends StatelessWidget {
     // if (!isSelected) return Colors.grey.shade300;
     switch (stateKey) {
       case 'assigned':
-        return Colors.green;
+        return AppColorList.Star1;
       case 'work_in':
-        return Colors.yellow.shade700;
+        return AppColorList.yellow_shade;
       case 'closed':
-        return Colors.red;
+        return AppColorList.Star3;
       default:
-        return Colors.blue;
+        return AppColorList.blue;
     }
   }
 
@@ -79,6 +77,39 @@ class TicketDetailPageView extends StatelessWidget {
               ),
             );
           }),
+          floatingActionButton: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  spreadRadius: 5,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              shape: BoxShape.circle,
+            ),
+            child: FloatingActionButton(
+              backgroundColor: AppColorList.AppButtonColor,
+              elevation: 0,
+              onPressed: () async {
+              FilePickerResult? result = await FilePicker.platform.pickFiles(
+                allowMultiple: true,
+              );
+              if (result != null && result.files.isNotEmpty) {
+
+                await controller.previewFile(context, result.files.first);
+                fabSelectedFiles.addAll(result.files);
+                showAttachmentBottomSheet(context);
+              }
+            },
+              child: Icon(
+                Icons.attach_file,
+                color: AppColorList.WhiteText,
+                size: 32, // <-- increase this value for a bigger icon
+              ),
+            ),
+          ),
         );
       },
     );
@@ -107,7 +138,6 @@ class TicketDetailPageView extends StatelessWidget {
         // sectionBox('Send Message', _buildListOrEmpty(ticket.spareParts1, 'No Spare Parts Available')),
         ],
         sectionBox('Messages', _buildMessageSection(ticket, controller, context)),
-
       ],
     );
   }
@@ -180,38 +210,147 @@ class TicketDetailPageView extends StatelessWidget {
 }
 
 
-  Widget _textOrEmpty(String? text) {
-    return text?.isNotEmpty == true ? ListTile(title: Text(text!)) : const ListTile(title: Text('No Data'));
-  }
+  // Widget _textOrEmpty(String? text) {
+  //   return text?.isNotEmpty == true ? ListTile(title: Text(text!)) : const ListTile(title: Text('No Data'));
+  // }
 
   Widget _buildAttachments(List pdfDocs, controller, BuildContext context, var ticket) {
     return pdfDocs.isNotEmpty
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: pdfDocs.map<Widget>((pdfDoc) {
-              return ListTile(
-                leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                title: Text(pdfDoc.name),
-                trailing: IconButton(
-                  icon: const Icon(Icons.open_in_new),
-                  onPressed: () => Get.to(() => PdfViewerPage(url: '${Constant.BASE_URL}${pdfDoc.url}', name: pdfDoc.name)),
-                ),
-                onTap: () async {
-                  final url = '${Constant.BASE_URL}${pdfDoc.url}';
-                  final fileName = pdfDoc.name.replaceAll(' ', '_');
-                  final localPath = await controller.downloadPdf(url, fileName, context);
-                  if (localPath != null) {
-                    Get.to(() => PdfSignView(), arguments: {'pdfPath': localPath, 'pdfName': pdfDoc.name, 'ticketNumber': ticket.ticketNo1});
-                  }
-                },
-              );
-            }).toList(),
-          )
-        : const ListTile(title: Text('No Document Attachments'));
+      ? Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: pdfDocs.map<Widget>((pdfDoc) {
+            return ListTile(
+              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+              title: Text(pdfDoc.name),
+              trailing: IconButton(
+                icon: const Icon(Icons.open_in_new),
+                onPressed: () => Get.to(() => PdfViewerPage(url: '${Constant.BASE_URL}${pdfDoc.url}', name: pdfDoc.name)),
+              ),
+              onTap: () async {
+                final url = '${Constant.BASE_URL}${pdfDoc.url}';
+                final fileName = pdfDoc.name.replaceAll(' ', '_');
+                final localPath = await controller.downloadPdf(url, fileName, context);
+                if (localPath != null) {
+                  Get.to(() => PdfSignView(), arguments: {'pdfPath': localPath, 'pdfName': pdfDoc.name, 'ticketNumber': ticket.ticketNo1});
+                }
+              },
+            );
+          }
+        ).toList(),
+      )
+    : const ListTile(title: Text('No Document Attachments'));
   }
 
   
-    
+
+
+  // ... inside TicketDetailPageView ...
+
+  void showAttachmentBottomSheet(BuildContext context) {
+    final controller = Get.find<TicketDetailPageController>();
+    // Get the current ticket (you may need to pass this as a parameter if not available here)
+    final ticket = controller.ticket_details.isNotEmpty ? controller.ticket_details[0] : null;
+
+    Get.bottomSheet(
+      Obx(() => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColorList.AppBackGroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Selected Attachments",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 10),
+            if (fabSelectedFiles.isEmpty)
+              const Text("No files selected."),
+            if (fabSelectedFiles.isNotEmpty)
+              SizedBox(
+                height: 120,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: fabSelectedFiles
+                      .map((file) => Container(
+                            margin: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: AppColorList.AppTextColor),
+                              borderRadius: BorderRadius.circular(8),
+                              color: AppColorList.ContainerBackground,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.insert_drive_file, size: 18),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    file.name.length > 18
+                                        ? file.name.substring(0, 16) + '...'
+                                        : file.name,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.close, size: 16),
+                                  onPressed: () {
+                                    fabSelectedFiles.remove(file);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  child: const Text("Close"),
+                  onPressed: () {
+                    Get.back();
+                  },
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.send),
+                  label: const Text("Send"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColorList.AppButtonColor,
+                    foregroundColor: AppColorList.WhiteText,
+                  ),
+                  onPressed: fabSelectedFiles.isEmpty || ticket == null
+                      ? null
+                      : () async {
+                          // Optionally show a loading indicator
+                          Get.back();
+                          Get.snackbar("Uploading", "Sending attachments...");
+                          await controller.sendMessage(
+                            ticket.ticket_id,
+                            "", // No message text, just attachments
+                            files: fabSelectedFiles.toList(),
+                          );
+                          fabSelectedFiles.clear();
+                          // Optionally refresh ticket/messages here if not handled in controller
+                          Get.snackbar("Success", "Attachments sent!");
+                        },
+                ),
+              ],
+            ),
+          ],
+        ),
+      )),
+      isScrollControlled: true,
+    );
+  }
+
     
   Widget _buildMessageSection(ticket, controller, BuildContext context) {
     final callController = Get.find<TicketDetailPageController>();

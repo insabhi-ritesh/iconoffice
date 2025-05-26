@@ -44,7 +44,7 @@ class PortalViewView extends GetView<PortalViewController> {
             child: Padding(
               padding: EdgeInsets.all(16.0),
               child: Obx(() {
-                if (controller.isLoading.value) {
+                if (controller.isLoading.value && controller.tickets.isEmpty) {
                   return  TicketListSkeleton(itemCount: 5,);
                 } else if ( controller.tickets.isEmpty){
                   return const Center(
@@ -58,8 +58,22 @@ class PortalViewView extends GetView<PortalViewController> {
                 }
                 
                 return ListView.builder(
-                  itemCount: controller.tickets.length,
+                  itemCount:controller.isLastPage.value
+                    ? controller.tickets.length
+                    : controller.tickets.length + 1,
+                  controller: controller.scrollController,
                   itemBuilder: (context, index) {
+                    if (index == controller.tickets.length) {
+                      // Show loading indicator at the bottom
+                      return SingleChildScrollView(
+                        child: const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      );
+                    }
                     final ticket = controller.tickets[index];
                     return Card(
                       shape: RoundedRectangleBorder(

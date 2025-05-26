@@ -14,11 +14,11 @@ import '../../../routes/app_pages.dart';
 class HomeController extends GetxController {
   final box = GetStorage();
   var tickets = <Ticket>[].obs;
-  ScrollController scrollController = ScrollController();
+  ScrollController   scrollController = ScrollController();
 
   // Pagination state
   int currentPage = 1;
-  final int pageSize = 50; // Adjust as per your API
+  final int pageSize = 15; // Adjust as per your API
   var isLoading = false.obs;
   var isLastPage = false.obs;
 
@@ -39,10 +39,7 @@ class HomeController extends GetxController {
       currentPage = 1;
       isLastPage.value = false;
       tickets.clear();
-    } else {
-      if (isLoading.value || isLastPage.value) return;
-
-    }
+    } 
 
     var partnerId = box.read('partnerId');
     try {

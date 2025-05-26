@@ -1,19 +1,29 @@
-
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../../../common/app_color.dart';
 
 class TicketListSkeleton extends StatelessWidget {
   final int itemCount;
-  const TicketListSkeleton({super.key, this.itemCount = 5});
+  final bool shrinkWrap;
+  final ScrollPhysics? physics;
+
+  const TicketListSkeleton({
+    super.key, 
+    this.itemCount = 5,
+    this.shrinkWrap = false,
+    this.physics  
+  });
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: itemCount,
+      shrinkWrap: shrinkWrap,
+      physics: physics,
       itemBuilder: (context, index) {
         return Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
+          baseColor: AppColorList.Skeleton_color,
+          highlightColor: AppColorList.Skeleton_color1,
           direction: ShimmerDirection.ltr,
           period: const Duration(milliseconds: 1200),
           child: Card(
@@ -34,7 +44,7 @@ class TicketListSkeleton extends StatelessWidget {
                       width: 80,
                       height: 18,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColorList.WhiteText,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -43,9 +53,9 @@ class TicketListSkeleton extends StatelessWidget {
                       width: 63,
                       height: 25,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColorList.WhiteText,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(width: 0.5, color: Colors.grey[300]!),
+                        border: Border.all(width: 0.5, color: AppColorList.Skeleton_color),
                       ),
                     ),
                   ],
@@ -61,7 +71,7 @@ class TicketListSkeleton extends StatelessWidget {
                           width: 90,
                           height: 14,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColorList.WhiteText,
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
@@ -70,7 +80,7 @@ class TicketListSkeleton extends StatelessWidget {
                           width: 120,
                           height: 14,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColorList.WhiteText,
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
@@ -84,16 +94,18 @@ class TicketListSkeleton extends StatelessWidget {
                           width: 60,
                           height: 14,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColorList.WhiteText,
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(
+                          width: 8
+                        ),
                         Container(
                           width: 100,
                           height: 14,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColorList.WhiteText,
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
@@ -107,7 +119,7 @@ class TicketListSkeleton extends StatelessWidget {
                       width: 120,
                       height: 18,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColorList.WhiteText,
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
@@ -117,7 +129,7 @@ class TicketListSkeleton extends StatelessWidget {
                   width: 16,
                   height: 16,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColorList.WhiteText,
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),

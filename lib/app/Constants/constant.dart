@@ -7,9 +7,11 @@ import '../routes/app_pages.dart';
 
 class Constant {
   static OdooClient? odooRpc;
+  
   //-----------Live Url------//
-  // static String BASE_URL = 'http://45.124.52.122:8069';
-  static String BASE_URL = 'http://192.168.0.111:8017';
+  static String BASE_URL = 'http://45.124.52.122:8069';
+  // static String BASE_URL = 'https://iconofficesolutions.com.au/';
+  // static String BASE_URL = 'http://192.168.0.110:8017';
   // static String BASE_URL = 'http://192.168.0.166:7099';
 
   static String odooUrl = BASE_URL;

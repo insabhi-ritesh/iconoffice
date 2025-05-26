@@ -55,7 +55,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.TICKET_DETAIL_PAGE,
-      page: () => const TicketDetailPageView(),
+      page: () => TicketDetailPageView(),
       binding: TicketDetailPageBinding(),
     ),
     GetPage(
