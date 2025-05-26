@@ -23,6 +23,7 @@ class FirebaseApi {
     print("Token: $firebaseToken");
     log(firebaseToken.toString());
     String tok = box.read('Token');
+    log(tok);
 
     await flutterLocalNotificationsPlugin.initialize(
         const InitializationSettings(

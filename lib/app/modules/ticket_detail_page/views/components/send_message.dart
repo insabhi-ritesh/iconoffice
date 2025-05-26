@@ -2,8 +2,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../../../../common/app_color.dart';
 import '../../controllers/ticket_detail_page_controller.dart';
 
 Padding sendMessageSection(

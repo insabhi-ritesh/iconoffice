@@ -18,7 +18,14 @@ class AppColorList {
   static Color Skeleton_color = Colors.grey[300]!;
   static Color Skeleton_color1 =  Colors.grey[100]!;
   static Color Star3 = Colors.red;
+  static Color OpacityRed = Colors.red.withOpacity(0.1);
   static Color yellow_shade = Colors.yellow.shade700;
   static const Color Warning = Color(0xFFFFC107);
   static Color blue = Colors.blue;
+  static Color OpacityBlack = Colors.black.withOpacity(0.1);
+  static Color OpacityBlack7 = Colors.black.withOpacity(0.7);
+  static Color OpacityBlue = Colors.blue.withOpacity(0.2);
+  static Color OpacityGreen = Colors.green.withOpacity(0.2);
+  static Color OpacityPurple = Colors.purple.withOpacity(0.2);
+  static Color Purple = Colors.purple;
 }

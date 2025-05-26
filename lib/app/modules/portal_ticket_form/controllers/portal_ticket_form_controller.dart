@@ -1,7 +1,6 @@
 
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -11,7 +10,6 @@ import 'package:http/http.dart' as http;
 import 'package:insabhi_icon_office/app/Constants/constant.dart';
 import 'package:insabhi_icon_office/app/common/app_color.dart';
 import 'package:insabhi_icon_office/app/common/fontSize.dart';
-import 'package:insabhi_icon_office/app/modules/portal_view/controllers/portal_view_controller.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../../../routes/app_pages.dart';

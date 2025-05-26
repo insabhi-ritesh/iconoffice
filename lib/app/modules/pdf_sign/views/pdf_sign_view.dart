@@ -1,10 +1,16 @@
+
 import 'dart:io';
+import 'dart:math' as math;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:insabhi_icon_office/app/common/app_color.dart';
+import 'package:insabhi_icon_office/app/common/fontSize.dart';
 import 'package:signature/signature.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart' show SfPdfViewer;
 import 'package:intl/intl.dart';
 
+import '../../../models/input_field.dart';
 import '../controllers/pdf_sign_controller.dart';
 
 class PdfSignView extends GetView<PdfSignController> {
@@ -17,458 +23,319 @@ class PdfSignView extends GetView<PdfSignController> {
     final String? pdfPath = args?['pdfPath'] ?? controller.pdfPath.value;
     final String pdfName = args?['pdfName'] ?? 'Document';
 
-    Widget getPdfWidget() {
-      if (pdfPath == null || pdfPath.isEmpty) {
-        return const Center(child: Text('No PDF path provided'));
-      } else if (pdfPath.startsWith('http')) {
-        return SfPdfViewer.network(
-          pdfPath,
-          controller: controller.pdfViewerController,
-          onPageChanged: (details) => controller.currentPage.value = details.newPageNumber,
-        );
-      } else {
-        final file = File(pdfPath);
-        return file.existsSync()
-            ? SfPdfViewer.file(file, controller: controller.pdfViewerController)
-            : Center(child: Text('PDF not found: $pdfPath'));
-      }
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Sign: $pdfName',
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            fontSize: 18,
+          style: TextStyle(
+            fontWeight: AppFontWeight.font7,
+            color: AppColorList.WhiteText,
+            fontSize: AppFontSize.size4,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        backgroundColor: AppColorList.AppButtonColor,
         elevation: 2,
         actions: [
           IconButton(
-            icon: const Icon(Icons.save, color: Colors.white, size: 26),
+            icon: Icon(
+              Icons.save,
+              color: AppColorList.WhiteText,
+              size: AppFontSize.sizeLarge,
+            ),
             onPressed: () async {
-              if (controller.validateInputs()) {
-                await controller.saveAndUploadSignedPdf(context, pdfPath ?? '', pdfName);
-              }
+              await controller.saveAndUploadSignedPdf(context, pdfPath ?? '', pdfName);
             },
           ),
         ],
       ),
       body: Column(
         children: [
-          // Top input section
-          Obx(() {
-            if (controller.isPortalUser.value || !controller.showInputFields.value) {
-              return const SizedBox.shrink();
-            }
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Signature field
-                  _buildInputField(
-                    label: 'Signature',
-                    child: Container(
-                      height: 110,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: controller.signatureError.value.isEmpty
-                              ? Colors.grey.shade400
-                              : Colors.redAccent,
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.grey.shade100,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            spreadRadius: 1,
-                            blurRadius: 3,
-                            offset: const Offset(0, 1.5),
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          Signature(
-                            controller: controller.signatureController,
-                            backgroundColor: Colors.transparent,
-                            width: double.infinity,
-                            height: 110,
-                          ),
-                          Positioned(
-                            right: 12,
-                            bottom: 12,
-                            child: ElevatedButton(
-                              onPressed: () => controller.signatureController.clear(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent.withOpacity(0.9),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                elevation: 2,
-                              ),
-                              child: const Text(
-                                'Clear',
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    errorText: controller.signatureError.value,
-                  ),
-                  const SizedBox(height: 16),
-                  // Text Message and Date
-                  Row(
+          _FieldSelectionRow(controller: controller),
+          Obx(() => controller.isEditingField.value
+            ? Flexible(
+                child: SingleChildScrollView(
+                  child: _FieldInputContainer(controller: controller),
+                ),
+              )
+            : const SizedBox.shrink()),
+          Expanded(
+            child: Obx(() => GestureDetector(
+                  onTapUp: controller.isPlacingField.value
+                      ? (details) => controller.placeFieldAt(details.localPosition)
+                      : null,
+                  child: Stack(
                     children: [
-                      Expanded(
-                        child: _buildInputField(
-                          label: 'Text Message',
-                          child: TextField(
-                            controller: controller.textController,
-                            decoration: InputDecoration(
-                              hintText: 'Enter text',
-                              hintStyle: TextStyle(color: Colors.grey.shade500),
-                              errorText: controller.textError.value.isEmpty
-                                  ? null
-                                  : controller.textError.value,
-                              filled: true,
-                              fillColor: Colors.grey.shade100,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade400),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Colors.blue,
-                                  width: 1.5,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 12,
-                              ),
-                            ),
-                            style: const TextStyle(fontSize: 15),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildInputField(
-                          label: 'Date',
-                          child: InkWell(
-                            onTap: () => _selectDate(context),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: controller.dateError.value.isEmpty
-                                      ? Colors.grey.shade400
-                                      : Colors.redAccent,
-                                  width: 1.5,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                color: Colors.grey.shade100,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.1),
-                                    spreadRadius: 1,
-                                    blurRadius: 3,
-                                    offset: const Offset(0, 1.5),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    controller.selectedDate.value != null
-                                        ? DateFormat('yyyy-MM-dd').format(controller.selectedDate.value!)
-                                        : 'Select date',
-                                    style: TextStyle(
-                                      color: controller.selectedDate.value != null
-                                          ? Colors.black87
-                                          : Colors.grey.shade500,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.calendar_today,
-                                    color: Colors.blue,
-                                    size: 20,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          errorText: controller.dateError.value,
-                        ),
-                      ),
+                      _PdfWidget(pdfPath: pdfPath, controller: controller),
+                      ..._buildPlacedFields(controller),
+                      if (controller.isPlacingField.value)
+                        _InstructionOverlay(),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  // Date & Time and Add Fields Button
-                  _buildInputField(
-                    label: 'Date & Time',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        InkWell(
-                          onTap: () => _selectDateTime(context),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.only(left: 12, right: 8, top: 14, bottom: 14),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: controller.dateTimeError.value.isEmpty
-                                    ? Colors.grey.shade400
-                                    : Colors.redAccent,
-                                width: 1.5,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.grey.shade100,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  spreadRadius: 1,
-                                  blurRadius: 3,
-                                  offset: const Offset(0, 1.5),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    controller.selectedDateTime.value != null
-                                        ? DateFormat('yyyy-MM-dd HH:mm').format(controller.selectedDateTime.value!)
-                                        : 'Select date & time',
-                                    style: TextStyle(
-                                      color: controller.selectedDateTime.value != null
-                                          ? Colors.black87
-                                          : Colors.grey.shade500,
-                                      fontSize: 15,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.access_time,
-                                  color: Colors.blue,
-                                  size: 20,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.center,
-                          child: SizedBox(
-                            width: 160,
-                            child: ElevatedButton(
-                              onPressed: () => controller.addFieldsToPdf(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 3,
-                                shadowColor: Colors.blue.withOpacity(0.3),
-                              ),
-                              child: const Text(
-                                'Add Data to PDF',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    errorText: controller.dateTimeError.value,
-                  ),
-                ],
-              ),
-            );
-          }),
-          // PDF viewer section
-          Expanded(
-            child: Obx(() {
-              return Stack(
-                children: [
-                  getPdfWidget(),
-                  // Text field position
-                  if (controller.textPosition.value != null)
-                    Positioned(
-                      left: controller.textPosition.value!.dx,
-                      top: controller.textPosition.value!.dy,
-                      child: GestureDetector(
-                        onPanUpdate: (details) => controller.moveTextField(details.delta),
-                        child: Container(
-                          width: 150,
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.blue),
-                            color: Colors.white.withOpacity(0.8),
-                          ),
-                          child: Text(controller.textController.text),
-                        ),
-                      ),
-                    ),
-                  // Date field position
-                  if (controller.datePosition.value != null)
-                    Positioned(
-                      left: controller.datePosition.value!.dx,
-                      top: controller.datePosition.value!.dy,
-                      child: GestureDetector(
-                        onPanUpdate: (details) => controller.moveDateField(details.delta),
-                        child: Container(
-                          width: 150,
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.green),
-                            color: Colors.white.withOpacity(0.8),
-                          ),
-                          child: Text(
-                            controller.selectedDate.value != null
-                                ? DateFormat('yyyy-MM-dd').format(controller.selectedDate.value!)
-                                : 'Date',
-                          ),
-                        ),
-                      ),
-                    ),
-                  // DateTime field position
-                  if (controller.dateTimePosition.value != null)
-                    Positioned(
-                      left: controller.dateTimePosition.value!.dx,
-                      top: controller.dateTimePosition.value!.dy,
-                      child: GestureDetector(
-                        onPanUpdate: (details) => controller.moveDateTimeField(details.delta),
-                        child: Container(
-                          width: 180,
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.purple),
-                            color: Colors.white.withOpacity(0.8),
-                          ),
-                          child: Text(
-                            controller.selectedDateTime.value != null
-                                ? DateFormat('yyyy-MM-dd HH:mm').format(controller.selectedDateTime.value!)
-                                : 'Date & Time',
-                          ),
-                        ),
-                      ),
-                    ),
-                  // Signature position
-                  if (controller.signaturePosition.value != null)
-                    Positioned(
-                      left: controller.signaturePosition.value!.dx,
-                      top: controller.signaturePosition.value!.dy,
-                      child: GestureDetector(
-                        onPanUpdate: (details) => controller.moveSignature(details.delta),
-                        child: Container(
-                          width: 150,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.blueAccent),
-                            color: Colors.white.withOpacity(0.8),
-                          ),
-                          child: controller.signatureImage.value != null
-                              ? Image.memory(controller.signatureImage.value!)
-                              : const Center(child: Text('Signature')),
-                        ),
-                      ),
-                    ),
-                  // Instruction overlay when placing fields
-                  if (controller.isPlacingFields.value)
-                    Positioned(
-                      bottom: 16,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.7),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'Tap on the document to place fields',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            }),
+                )),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInputField({required String label, required Widget child, String? errorText}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: Colors.black87,
+  List<Widget> _buildPlacedFields(PdfSignController controller) {
+    return [
+      ...controller.placedTextFields
+          .map((field) => _DraggableField(
+                controller: controller,
+                field: field,
+                type: FieldType.text,
+                color: AppColorList.OpacityBlue,
+                borderColor: AppColorList.blue,
+                child: Text(
+                  field.value as String,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              )),
+      ...controller.placedDateFields
+          .map((field) => _DraggableField(
+                controller: controller,
+                field: field,
+                type: FieldType.date,
+                color: AppColorList.OpacityGreen,
+                borderColor: AppColorList.Star1,
+                child: Text(
+                  field.value as String,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              )),
+      ...controller.placedDateTimeFields
+          .map((field) => _DraggableField(
+                controller: controller,
+                field: field,
+                type: FieldType.dateTime,
+                color: AppColorList.OpacityPurple,
+                borderColor: AppColorList.Purple,
+                child: Text(
+                  field.value as String,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              )),
+      ...controller.placedSignatureFields
+          .map((field) => _DraggableField(
+                controller: controller,
+                field: field,
+                type: FieldType.signature,
+                color: AppColorList.OpacityRed,
+                borderColor: AppColorList.Star3,
+                child: Image.memory(field.value as Uint8List),
+              )),
+    ];
+  }
+}
+
+class _PdfWidget extends StatelessWidget {
+  final String? pdfPath;
+  final PdfSignController controller;
+  const _PdfWidget({required this.pdfPath, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    if (pdfPath == null || pdfPath!.isEmpty) {
+      return const Center(child: Text('No PDF path provided'));
+    } else if (pdfPath!.startsWith('http')) {
+      return SfPdfViewer.network(
+        pdfPath!,
+        controller: controller.pdfViewerController,
+        onPageChanged: (details) => controller.currentPage.value = details.newPageNumber,
+      );
+    } else {
+      final file = File(pdfPath!);
+      return file.existsSync()
+          ? SfPdfViewer.file(file, controller: controller.pdfViewerController)
+          : Center(child: Text('PDF not found: $pdfPath'));
+    }
+  }
+}
+
+class _FieldSelectionRow extends StatelessWidget {
+  final PdfSignController controller;
+  const _FieldSelectionRow({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColorList.WhiteText,
+        boxShadow: [
+          BoxShadow(
+            color: AppColorList.OpacityBlack,
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(height: 8),
-        child,
-        if (errorText != null && errorText.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 6, left: 10),
-            child: Text(
-              errorText,
-              style: const TextStyle(
-                color: Colors.redAccent,
-                fontSize: 12,
-              ),
-            ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _FieldButton(
+            controller: controller,
+            icon: Icons.edit,
+            label: 'Text',
+            fieldType: FieldType.text,
+            color: AppColorList.blue,
           ),
-      ],
+          _FieldButton(
+            controller: controller,
+            icon: Icons.calendar_today,
+            label: 'Date',
+            fieldType: FieldType.date,
+            color: AppColorList.Star1,
+          ),
+          _FieldButton(
+            controller: controller,
+            icon: Icons.access_time,
+            label: 'Date & Time',
+            fieldType: FieldType.dateTime,
+            color: AppColorList.Purple,
+          ),
+          _FieldButton(
+            controller: controller,
+            icon: Icons.draw,
+            label: 'Signature',
+            fieldType: FieldType.signature,
+            color: AppColorList.Star3,
+          ),
+        ],
+      ),
     );
   }
+}
+
+class _FieldButton extends StatelessWidget {
+  final PdfSignController controller;
+  final IconData icon;
+  final String label;
+  final FieldType fieldType;
+  final Color color;
+
+  const _FieldButton({
+    required this.controller,
+    required this.icon,
+    required this.label,
+    required this.fieldType,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final isSelected = controller.selectedFieldType.value == fieldType;
+      return InkWell(
+        onTap: () => controller.selectFieldType(fieldType),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: isSelected ? Border.all(color: color, width: 2) : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _FieldInputContainer extends StatelessWidget {
+  final PdfSignController controller;
+  const _FieldInputContainer({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      switch (controller.selectedFieldType.value) {
+        case FieldType.text:
+          return _TextInputContainer(controller: controller);
+        case FieldType.date:
+          return _DateInputContainer(controller: controller);
+        case FieldType.dateTime:
+          return _DateTimeInputContainer(controller: controller);
+        case FieldType.signature:
+          return _SignatureInputContainer(controller: controller);
+        default:
+          return const SizedBox.shrink();
+      }
+    });
+  }
+}
+
+class _TextInputContainer extends StatelessWidget {
+  final PdfSignController controller;
+  const _TextInputContainer({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _inputContainerDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Enter Text',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: controller.textController,
+            decoration: InputDecoration(
+              hintText: 'Enter your text here',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              errorText: controller.textError.value.isEmpty ? null : controller.textError.value,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => controller.clearFieldSelection(),
+                child: const Text('Cancel'),
+              ),
+              const SizedBox(width: 16),
+              ElevatedButton(
+                onPressed: () => controller.prepareToPlaceField(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Place on Document'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DateInputContainer extends StatelessWidget {
+  final PdfSignController controller;
+  const _DateInputContainer({required this.controller});
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -483,6 +350,80 @@ class PdfSignView extends GetView<PdfSignController> {
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _inputContainerDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Select Date', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 8),
+          InkWell(
+            onTap: () => _selectDate(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: controller.dateError.value.isEmpty ? Colors.grey : Colors.red,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      controller.selectedDate.value != null
+                          ? DateFormat('yyyy-MM-dd').format(controller.selectedDate.value!)
+                          : 'Select a date',
+                      style: TextStyle(
+                        color: controller.selectedDate.value != null ? Colors.black : Colors.grey,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.calendar_today, color: Colors.green),
+                ],
+              ),
+            ),
+          ),
+          if (controller.dateError.value.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 12),
+              child: Text(
+                controller.dateError.value,
+                style: TextStyle(color: AppColorList.Star3, fontSize: AppFontSize.size5),
+              ),
+            ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => controller.clearFieldSelection(),
+                child: const Text('Cancel'),
+              ),
+              const SizedBox(width: 16),
+              ElevatedButton(
+                onPressed: () => controller.prepareToPlaceField(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColorList.Star1,
+                  foregroundColor: AppColorList.WhiteText,
+                ),
+                child: const Text('Place on Document'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DateTimeInputContainer extends StatelessWidget {
+  final PdfSignController controller;
+  const _DateTimeInputContainer({required this.controller});
+
   Future<void> _selectDateTime(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -494,7 +435,9 @@ class PdfSignView extends GetView<PdfSignController> {
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay.fromDateTime(controller.selectedDateTime.value ?? DateTime.now()),
+        initialTime: TimeOfDay.fromDateTime(
+          controller.selectedDateTime.value ?? DateTime.now(),
+        ),
       );
 
       if (pickedTime != null) {
@@ -509,4 +452,268 @@ class PdfSignView extends GetView<PdfSignController> {
       }
     }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _inputContainerDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Select Date & Time', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 8),
+          InkWell(
+            onTap: () => _selectDateTime(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: controller.dateTimeError.value.isEmpty ? AppColorList.MainShadow : AppColorList.Star3,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      controller.selectedDateTime.value != null
+                          ? DateFormat('yyyy-MM-dd HH:mm').format(controller.selectedDateTime.value!)
+                          : 'Select date and time',
+                      style: TextStyle(
+                        color: controller.selectedDateTime.value != null ? AppColorList.AppText : AppColorList.MainShadow,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.access_time, color: AppColorList.Purple),
+                ],
+              ),
+            ),
+          ),
+          if (controller.dateTimeError.value.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 12),
+              child: Text(
+                controller.dateTimeError.value,
+                style: TextStyle(color: AppColorList.Star3, fontSize: AppFontSize.size5),
+              ),
+            ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.center,
+            child: ElevatedButton(
+              onPressed: () {
+                if (controller.selectedDateTime.value != null) {
+                  controller.dateTimePosition.value = Offset(
+                    MediaQuery.of(context).size.width / 2 - 90,
+                    MediaQuery.of(context).size.height / 2 - 20,
+                  );
+                  controller.dateTimeError.value = '';
+                } else {
+                  controller.dateTimeError.value = 'Please select a date and time';
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColorList.Purple,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Add to Document',
+                style: TextStyle(
+                  color: AppColorList.WhiteText,
+                  fontWeight: AppFontWeight.font6,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+class _SignatureInputContainer extends StatelessWidget {
+  final PdfSignController controller;
+  const _SignatureInputContainer({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _inputContainerDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Draw Signature', style: TextStyle(fontWeight: AppFontWeight.font6, fontSize: 16)),
+          const SizedBox(height: 8),
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColorList.MainShadow),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Signature(
+                controller: controller.signatureController,
+                backgroundColor: AppColorList.WhiteText,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton.icon(
+                onPressed: () => controller.signatureController.clear(),
+                icon: Icon(Icons.refresh, color: AppColorList.Star1),
+                label: Text('Clear', style: TextStyle(color: AppColorList.Star1)),
+              ),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => controller.clearFieldSelection(),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: () => controller.prepareToPlaceField(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColorList.Star1,
+                      foregroundColor: AppColorList.WhiteText,
+                    ),
+                    child: const Text('Place on Document'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DraggableField extends StatelessWidget {
+  final PdfSignController controller;
+  final PlacedField field;
+  final FieldType type;
+  final Color color;
+  final Color borderColor;
+  final Widget child;
+
+  const _DraggableField({
+    required this.controller,
+    required this.field,
+    required this.type,
+    required this.color,
+    required this.borderColor,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // If field.size is not observable, remove Obx here
+    final Size size = field.size;
+    return Positioned(
+      left: field.position.dx,
+      top: field.position.dy,
+      child: GestureDetector(
+        onPanUpdate: (details) {
+          controller.updateFieldPosition(field, details.delta);
+        },
+        onLongPress: () {
+          controller.removeField1(field, type);
+        },
+        child: Stack(
+          children: [
+            Container(
+              width: size.width,
+              height: size.height,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color,
+                border: Border.all(color: borderColor, width: 1.5),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: child,
+            ),
+            // Resize handle (bottom-right corner)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: GestureDetector(
+                onPanUpdate: (details) {
+                  // Minimum size
+                  const double minWidth = 40;
+                  const double minHeight = 24;
+                  // Maximum size (optional)
+                  const double maxWidth = 400;
+                  const double maxHeight = 200;
+                  final newWidth = math.max(minWidth, math.min(size.width + details.delta.dx, maxWidth));
+                  final newHeight = math.max(minHeight, math.min(size.height + details.delta.dy, maxHeight));
+                  controller.updateFieldSize(field, Size(newWidth, newHeight));
+                },
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: AppColorList.WhiteText,
+                    border: Border.all(color: borderColor, width: 1),
+                    borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(4),
+                    ),
+                  ),
+                  child: Icon(Icons.open_in_full, size: 14, color: AppColorList.MainShadow),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InstructionOverlay extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Container(
+        color: AppColorList.OpacityBlack,
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: AppColorList.OpacityBlack7,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              'Tap anywhere to place the field',
+              style: TextStyle(
+                color: AppColorList.WhiteText,
+                fontSize: 16,
+                fontWeight: AppFontWeight.font6,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+BoxDecoration _inputContainerDecoration() => BoxDecoration(
+      color: AppColorList.WhiteText,
+      boxShadow: [
+        BoxShadow(
+          color: AppColorList.OpacityBlack,
+          spreadRadius: 1,
+          blurRadius: 5,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    );
