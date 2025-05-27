@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../../../../common/app_color.dart';
 import '../../../../common/fontSize.dart';
 import '../../../../models/timesheet.dart';
