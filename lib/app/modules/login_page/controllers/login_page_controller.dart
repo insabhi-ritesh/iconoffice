@@ -82,7 +82,7 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
           }
           
           box.write('partnerId', partnerId);
-          int id = box.read('partnerId');
+          // int id = box.read('partnerId');
           var print = box.read('isLogged');
           log("Permit list: $print");
           Get.snackbar('Success', 'Login successful!');

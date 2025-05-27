@@ -1,4 +1,4 @@
-import 'dart:async' show Timer;
+// import 'dart:async' show Timer;
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -317,7 +317,9 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       log('Fetcht the ticket data: $URL');
       var response = await http.get(URL);
 
-      log(response.body);
+      // Uncomment this line to log the response body
+      // log(response.body);
+
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
         ticket_details.clear();
@@ -335,7 +337,6 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       }
     } catch  (e) {
       log("error message: $e");
-      print("Error fetching user profile data.");
     }
   }
 
@@ -345,7 +346,8 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       log('This is the Url to fetch the messages from the ticket helpdesk: $URL');
       var response = await http.get(URL);
 
-      log(response.body);
+      // Uncomment this line to log the response body
+      // log(response.body);
       
       if (response.statusCode == 200){
         
@@ -393,7 +395,9 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      log(response.body);
+      // Uncomment this line to log the response body
+      // log("Response status code: ${response.statusCode}");
+      // log(response.body);
 
       if (response.statusCode == 200) {
         await GetMessagesFromTicket(ticket_id);
@@ -487,9 +491,9 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       await Get.to(() => PdfViewerPage(
         url: file.path ?? '',
         name: file.name,
-        // isLocal: true, // Add this param to your PdfViewerPage if needed
       ));
-    } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].contains(ext)) {
+    }
+    else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'pdf'].contains(ext)) {
       // For images, show a dialog with Image.file
       await showDialog(
         context: context,

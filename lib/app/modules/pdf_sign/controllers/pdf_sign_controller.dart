@@ -10,9 +10,7 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:intl/intl.dart';
-
 import '../../../Constants/constant.dart';
 import '../../../models/input_field.dart';
 
