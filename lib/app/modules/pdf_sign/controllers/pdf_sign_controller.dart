@@ -278,8 +278,8 @@ class PdfSignController extends GetxController {
     String pdfName, {
     Size? pdfViewSize,
   }) async {
-    File? signedPdfFile;
-    bool uploadSuccess = false;
+    // File? signedPdfFile;
+    // bool uploadSuccess = false;
     try {
       if (!validateInputs()) {
         Get.snackbar('Error', 'Please add at least one field to the document.');

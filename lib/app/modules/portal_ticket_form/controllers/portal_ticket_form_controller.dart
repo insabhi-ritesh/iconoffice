@@ -44,7 +44,7 @@ class PortalTicketFormController extends GetxController {
   // Dropdown
   var selectedOption = RxnString();
 
-  final dropdownOptions = [
+  final dropdownOptions = <String>[
     'ACT',
     'NSW',
     'NT',

@@ -14,7 +14,7 @@ Widget buildTimesheetForm(TicketDetailPageController controller, BuildContext co
       return Column(
         children: [
           ...controller.timesheetInputs.asMap().entries.map((entry) {
-            int index = entry.key;
+            // int index = entry.key;
             TimesheetInput timesheet = entry.value;
             return Card(
               child: Padding(
@@ -78,7 +78,7 @@ Widget buildTimesheetForm(TicketDetailPageController controller, BuildContext co
                           onPressed: () async {
                             final picked = await showDatePicker(
                               context: Get.context!,
-                              initialDate: timesheet.date ?? DateTime.now(),
+                              initialDate: timesheet.date,
                               firstDate: DateTime(2020),
                               lastDate: DateTime(2100),
                             );
