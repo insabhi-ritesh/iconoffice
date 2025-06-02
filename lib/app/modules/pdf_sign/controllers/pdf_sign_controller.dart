@@ -12,7 +12,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import '../../../Constants/constant.dart';
-import '../../../models/input_field.dart';
 
 enum FieldType {
   none,
@@ -31,6 +30,7 @@ class PdfSignController extends GetxController {
 
   final PdfViewerController pdfViewerController = PdfViewerController();
   final RxInt currentPage = 1.obs;
+  final RxDouble zoomLevel = 1.0.obs;
 
   // Selected field type
   final Rx<FieldType> selectedFieldType = Rx<FieldType>(FieldType.none);
@@ -70,7 +70,7 @@ class PdfSignController extends GetxController {
   final Size dateTimeBoxSize = const Size(180, 40);
 
   // Select field type
-  void selectFieldType(FieldType  type) {
+  void selectFieldType(FieldType type) {
     selectedFieldType.value = type;
     isEditingField.value = true;
     isPlacingField.value = false;
@@ -81,13 +81,17 @@ class PdfSignController extends GetxController {
     selectedFieldType.value = FieldType.none;
     isEditingField.value = false;
     isPlacingField.value = false;
+    textError.value = '';
+    dateError.value = '';
+    dateTimeError.value = '';
+    signatureError.value = '';
   }
 
   // Prepare to place field on PDF
   void prepareToPlaceField() {
     // Validate the current field data before placing
     bool isValid = true;
-    
+
     switch (selectedFieldType.value) {
       case FieldType.text:
         if (textController.text.trim().isEmpty) {
@@ -147,6 +151,7 @@ class PdfSignController extends GetxController {
             position: position,
             value: textController.text,
             size: textBoxSize,
+            type: FieldType.text,
           ),
         );
         textController.clear();
@@ -159,6 +164,7 @@ class PdfSignController extends GetxController {
               position: position,
               value: DateFormat('yyyy-MM-dd').format(selectedDate.value!),
               size: dateBoxSize,
+              type: FieldType.date,
             ),
           );
           selectedDate.value = null;
@@ -172,6 +178,7 @@ class PdfSignController extends GetxController {
               position: position,
               value: DateFormat('yyyy-MM-dd HH:mm').format(selectedDateTime.value!),
               size: dateTimeBoxSize,
+              type: FieldType.dateTime,
             ),
           );
           selectedDateTime.value = null;
@@ -186,6 +193,7 @@ class PdfSignController extends GetxController {
               position: position,
               value: signatureImg,
               size: signatureBoxSize,
+              type: FieldType.signature,
             ),
           );
           signatureController.clear();
@@ -199,6 +207,7 @@ class PdfSignController extends GetxController {
     // Reset state after placing
     isPlacingField.value = false;
     selectedFieldType.value = FieldType.none;
+    clearFieldSelection();
   }
 
   // Move a placed field
@@ -245,6 +254,42 @@ class PdfSignController extends GetxController {
     }
   }
 
+  // Resize a placed field (works for all field types)
+  void resizeField(String id, FieldType type, Size newSize) {
+    switch (type) {
+      case FieldType.text:
+        final index = placedTextFields.indexWhere((field) => field.id == id);
+        if (index != -1) {
+          final field = placedTextFields[index];
+          placedTextFields[index] = field.copyWith(size: newSize);
+        }
+        break;
+      case FieldType.date:
+        final index = placedDateFields.indexWhere((field) => field.id == id);
+        if (index != -1) {
+          final field = placedDateFields[index];
+          placedDateFields[index] = field.copyWith(size: newSize);
+        }
+        break;
+      case FieldType.dateTime:
+        final index = placedDateTimeFields.indexWhere((field) => field.id == id);
+        if (index != -1) {
+          final field = placedDateTimeFields[index];
+          placedDateTimeFields[index] = field.copyWith(size: newSize);
+        }
+        break;
+      case FieldType.signature:
+        final index = placedSignatureFields.indexWhere((field) => field.id == id);
+        if (index != -1) {
+          final field = placedSignatureFields[index];
+          placedSignatureFields[index] = field.copyWith(size: newSize);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   // Remove a placed field
   void removeField(String id, FieldType type) {
     switch (type) {
@@ -267,19 +312,35 @@ class PdfSignController extends GetxController {
 
   // Validation
   bool validateInputs() {
-    return placedTextFields.isNotEmpty || 
-           placedDateFields.isNotEmpty || 
-           placedDateTimeFields.isNotEmpty || 
-           placedSignatureFields.isNotEmpty;
+    return placedTextFields.isNotEmpty ||
+        placedDateFields.isNotEmpty ||
+        placedDateTimeFields.isNotEmpty ||
+        placedSignatureFields.isNotEmpty;
   }
+
+   /// Moves a field by delta (used by _DraggableField)
+  void updateFieldPosition(PlacedField field, Offset delta) {
+    moveField(field.id, field.type, delta);
+  }
+
+  /// Removes a field (used by _DraggableField)
+  void removeField1(PlacedField field, FieldType type) {
+    removeField(field.id, type);
+  }
+
+  /// Updates the size of a field (used by _DraggableField)
+  void updateFieldSize(PlacedField field, Size newSize) {
+    resizeField(field.id, field.type, newSize);
+  }
+
+  
+
   Future<void> saveAndUploadSignedPdf(
     BuildContext context,
     String pdfPath,
     String pdfName, {
     Size? pdfViewSize,
   }) async {
-    // File? signedPdfFile;
-    // bool uploadSuccess = false;
     try {
       if (!validateInputs()) {
         Get.snackbar('Error', 'Please add at least one field to the document.');
@@ -309,8 +370,8 @@ class PdfSignController extends GetxController {
         final double scaleX = pdfBoxSize.width / widgetSize.width;
         final double scaleY = pdfBoxSize.height / widgetSize.height;
         return Offset(
-          widgetOffset.dx * scaleX, 
-          pdfBoxSize.height - ((widgetOffset.dy + widgetBoxSize.height) * scaleY)
+          widgetOffset.dx * scaleX,
+          pdfBoxSize.height - ((widgetOffset.dy + widgetBoxSize.height) * scaleY),
         );
       }
 
@@ -356,8 +417,6 @@ class PdfSignController extends GetxController {
 
       // Save PDF
       final Directory tempDir = await getTemporaryDirectory();
-      // final String fileName = pdfName.isNotEmpty ? pdfName : 'signed_pdf_${DateTime.now().millisecondsSinceEpoch}';
-      // final String signedPdfPath = '${tempDir.path}/$fileName.pdf';
       final String baseName = pdfName.isNotEmpty ? pdfName : 'signed_pdf_${DateTime.now().millisecondsSinceEpoch}';
       final String signedPdfPath = await getUniquePdfFilePath(tempDir, baseName);
       final File signedPdfFile = File(signedPdfPath);
@@ -365,14 +424,13 @@ class PdfSignController extends GetxController {
       await signedPdfFile.writeAsBytes(await document.save());
       document.dispose();
 
-      final bool uploadSuccess = await _uploadSignedPdf(signedPdfPath);
+      final bool uploadSuccess = await uploadSignedPdf(signedPdfPath);
 
       if (uploadSuccess) {
         try {
           if (await signedPdfFile.exists()) {
             await signedPdfFile.delete();
           }
-          // Get.offAllNamed(Routes.TICKET_DETAIL_PAGE);
           Get.back();
           Get.find<TicketDetailPageController>().GetTicketData(ticketNumber);
         } catch (e) {
@@ -392,7 +450,7 @@ class PdfSignController extends GetxController {
     }
   }
 
-  Future<bool> _uploadSignedPdf(String filePath) async {
+  Future<bool> uploadSignedPdf(String filePath) async {
     final partnerId = box.read('partnerId');
     try {
       final request = http.MultipartRequest(
@@ -401,6 +459,12 @@ class PdfSignController extends GetxController {
       );
       request.files.add(await http.MultipartFile.fromPath('file', filePath));
       final response = await request.send();
+
+      if(isPortalUser.value) {
+        if (response.statusCode == 200) {
+          log('PDF uploaded successfully: $response.');
+        }
+      }
       return response.statusCode == 200;
     } catch (e) {
       log('Upload failed: $e');
@@ -421,9 +485,17 @@ class PdfSignController extends GetxController {
     super.onInit();
     isPortalUser.value = box.read('is_portal_user') ?? false;
     final args = Get.arguments as Map<String, dynamic>? ?? {};
-    ticketNumber = args['ticketNumber'] ?? '';
+    ticketNumber = args['ticket_number'] ?? '';
     pdfPath.value = args['pdfPath'] ?? '';
+    // listenToZoom();  // <<--- Start listening to zoom changes
   }
+
+  //Listen to zoom changes (call this in your view's initState)
+  // void listenToZoom() {
+  //   pdfViewerController.addListener(() {
+  //     zoomLevel.value = pdfViewerController.zoomLevel;
+  //   });
+  // }
 
 
   void clearAllFields() {
@@ -436,66 +508,8 @@ class PdfSignController extends GetxController {
     selectedDateTime.value = null;
     signatureController.clear();
     signatureImage.value = null;
-
-    // Optionally clear the PDF path if you want to reset the state
-    // pdfPath.value = '';
-  }
-
-  
-  // Add this method to your PdfSignController class
-  void updateFieldPosition(PlacedField field, Offset delta) {
-    // Update the field's position by adding the delta from the drag gesture
-    field.position = Offset(
-      field.position.dx + delta.dx,
-      field.position.dy + delta.dy,
-    );
-    
-    // Trigger UI update
-    update();
-    
-    // If you're using specific lists for different field types, you may need to update
-    // the specific list that contains this field
-    if (placedTextFields.contains(field)) {
-      placedTextFields.refresh();
-    } else if (placedDateFields.contains(field)) {
-      placedDateFields.refresh();
-    } else if (placedDateTimeFields.contains(field)) {
-      placedDateTimeFields.refresh();
-    } else if (placedSignatureFields.contains(field)) {
-      placedSignatureFields.refresh();
-    }
-  }
-
-  // You might also need the removeField method if it's not already implemented
-  void removeField1(PlacedField field, FieldType type) {
-    switch (type) {
-      case FieldType.text:
-        placedTextFields.remove(field);
-        break;
-      case FieldType.date:
-        placedDateFields.remove(field);
-        break;
-      case FieldType.dateTime:
-        placedDateTimeFields.remove(field);
-        break;
-      case FieldType.signature:
-        placedSignatureFields.remove(field);
-        break;
-      case FieldType.none:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-    }
-    update();
-  }
-  void updateFieldSize(PlacedField field, Size newSize) {
-    field.size = newSize; // If Rx<Size>, use field.size.value = newSize;
-    placedTextFields.refresh();
-    placedDateFields.refresh();
-    placedDateTimeFields.refresh();
-    placedSignatureFields.refresh();
   }
 }
-
 
 // Helper function to generate unique PDF file paths
 Future<String> getUniquePdfFilePath(Directory directory, String baseName) async {
@@ -512,8 +526,35 @@ Future<String> getUniquePdfFilePath(Directory directory, String baseName) async 
   return filePath;
 }
 
+// PlacedField model should have a 'type' property for easier handling
+class PlacedField {
+  final String id;
+  final Offset position;
+  final dynamic value;
+  final Size size;
+  final FieldType type;
 
+  PlacedField({
+    required this.id,
+    required this.position,
+    required this.value,
+    required this.size,
+    required this.type,
+  });
 
-extension on PdfDocument {
-  get ready => null;
-}
+  PlacedField copyWith({
+    String? id,
+    Offset? position,
+    dynamic value,
+    Size? size,
+    FieldType? type,
+  }) {
+    return PlacedField(
+      id: id ?? this.id,
+      position: position ?? this.position,
+      value: value ?? this.value,
+      size: size ?? this.size,
+      type: type ?? this.type,
+    );
+  }
+} 

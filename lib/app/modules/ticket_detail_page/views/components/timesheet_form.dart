@@ -96,9 +96,10 @@ Widget buildTimesheetForm(TicketDetailPageController controller, BuildContext co
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
-                              timesheet.date != null
-                                ? DateFormat('yyyy-MM-dd').format(timesheet.date!)
-                                : DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                              // timesheet.date != null
+                              //   ? 
+                                DateFormat('yyyy-MM-dd').format(timesheet.date),
+                                // : DateFormat('yyyy-MM-dd').format(DateTime.now()),
                               style: const TextStyle(fontWeight: AppFontWeight.font6),
                               textAlign: TextAlign.center,
                             ),

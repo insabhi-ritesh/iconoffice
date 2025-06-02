@@ -1,8 +1,5 @@
-
-  import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../../controllers/ticket_detail_page_controller.dart';
 
 Widget buildProductSearchResults(TicketDetailPageController controller) {

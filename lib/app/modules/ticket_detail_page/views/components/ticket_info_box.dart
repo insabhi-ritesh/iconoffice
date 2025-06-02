@@ -19,15 +19,10 @@ Container ticketInfoBox(ticket) {
     ),
     child: Column(
       children: [
-        // ticketInfoRow('Email', ticket.temailFrom1 ?? '---'),
-        // ticketInfoRow('Company', ticket.customer1 ?? '---'),
-        // ticketInfoRow('Customer', ticket.tpartnerName1 ?? '---'),
         ticketInfoRow('Ticket Reference', ticket.tref1.trim() ?? '---'),
         ticketInfoRow('Serial No', ticket.serialNo1.trim() ?? '---'),
         ticketInfoRow('Model No', ticket.model_number1 ?? '---'),
-        // ticketInfoRow('Team Leader', ticket.teamLeader1 ?? '---'),
         ticketInfoRow('Status', ticket.state1 ?? '---'),
-        // ticketInfoRow('Is Ticket Closed', (ticket.state1.toLowerCase() == 'closed') ? 'Yes' : 'No'),
         ticketInfoRow('Fault Area', ticket.faultArea1 ?? '---'),
         ticketInfoRow('Description', ticket.Description1?? '---'),
       ],
