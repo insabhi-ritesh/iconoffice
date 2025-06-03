@@ -8,9 +8,11 @@ import 'package:insabhi_icon_office/app/modules/ticket_detail_page/controllers/t
 import 'package:signature/signature.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
-import 'package:path_provider/path_provider.dart';
+// import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import '../../../Constants/constant.dart';
+import '../../../routes/app_pages.dart';
+// import '../../../routes/app_pages.dart';
 
 enum FieldType {
   none,
@@ -40,7 +42,7 @@ class PdfSignController extends GetxController {
   final TextEditingController textController = TextEditingController();
   final RxString textError = ''.obs;
 
-  final Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
+  var selectedDate = ''.obs;
   final RxString dateError = ''.obs;
 
   final Rx<DateTime?> selectedDateTime = Rx<DateTime?>(null);
@@ -90,7 +92,7 @@ class PdfSignController extends GetxController {
         textController.clear();
         break;
       case FieldType.date:
-        if (selectedDate.value != null) {
+        if (selectedDate.value != '') {
           placedDateFields.add(
             PlacedField(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -104,7 +106,7 @@ class PdfSignController extends GetxController {
               percentHeight: dateBoxSize.height / 600,
             ),
           );
-          selectedDate.value = null;
+          selectedDate.value = '';
         }
         break;
       case FieldType.dateTime:
@@ -251,7 +253,7 @@ class PdfSignController extends GetxController {
         }
         break;
       case FieldType.date:
-        if (selectedDate.value == null) {
+        if (selectedDate.value == '') {
           dateError.value = 'Date is required';
           isValid = false;
         } else {
@@ -286,75 +288,6 @@ class PdfSignController extends GetxController {
       isPlacingField.value = true;
     }
   }
-
-  // Future<void> placeFieldAt(Offset position) async {
-  //   if (!isPlacingField.value) return;
-
-  //   switch (selectedFieldType.value) {
-  //     case FieldType.text:
-  //       placedTextFields.add(
-  //         PlacedField(
-  //           id: DateTime.now().millisecondsSinceEpoch.toString(),
-  //           position: position,
-  //           value: textController.text,
-  //           size: textBoxSize,
-  //           type: FieldType.text,
-  //         ),
-  //       );
-  //       textController.clear();
-  //       break;
-  //     case FieldType.date:
-  //       if (selectedDate.value != null) {
-  //         placedDateFields.add(
-  //           PlacedField(
-  //             id: DateTime.now().millisecondsSinceEpoch.toString(),
-  //             position: position,
-  //             value: DateFormat('yyyy-MM-dd').format(selectedDate.value!),
-  //             size: dateBoxSize,
-  //             type: FieldType.date,
-  //           ),
-  //         );
-  //         selectedDate.value = null;
-  //       }
-  //       break;
-  //     case FieldType.dateTime:
-  //       if (selectedDateTime.value != null) {
-  //         placedDateTimeFields.add(
-  //           PlacedField(
-  //             id: DateTime.now().millisecondsSinceEpoch.toString(),
-  //             position: position,
-  //             value: DateFormat('yyyy-MM-dd HH:mm').format(selectedDateTime.value!),
-  //             size: dateTimeBoxSize,
-  //             type: FieldType.dateTime,
-  //           ),
-  //         );
-  //         selectedDateTime.value = null;
-  //       }
-  //       break;
-  //     case FieldType.signature:
-  //       final Uint8List? signatureImg = await signatureController.toPngBytes();
-  //       if (signatureImg != null) {
-  //         placedSignatureFields.add(
-  //           PlacedField(
-  //             id: DateTime.now().millisecondsSinceEpoch.toString(),
-  //             position: position,
-  //             value: signatureImg,
-  //             size: signatureBoxSize,
-  //             type: FieldType.signature,
-  //           ),
-  //         );
-  //         signatureController.clear();
-  //         signatureImage.value = null;
-  //       }
-  //       break;
-  //     default:
-  //       break;
-  //   }
-
-  //   isPlacingField.value = false;
-  //   selectedFieldType.value = FieldType.none;
-  //   clearFieldSelection();
-  // }
 
   void moveField(String id, FieldType type, Offset delta) {
     switch (type) {
@@ -472,115 +405,141 @@ class PdfSignController extends GetxController {
     resizeField(field.id, field.type, newSize);
   }
 
-  Future<void> saveAndUploadSignedPdf(
-    BuildContext context,
-    String pdfPath,
-    String pdfName, {
-    Size? pdfViewSize,
-  }) async {
+  Future<void> savePdfWithFields() async {
+    final File file = File(pdfPath.value);
+    if (!file.existsSync()) {
+      print('PDF not found');
+      return;
+    }
+
+    final Uint8List originalBytes = await file.readAsBytes();
+    final PdfDocument document = PdfDocument(inputBytes: originalBytes);
+
+    final Size pageSize = Size(
+      document.pages[0].size.width,
+      document.pages[0].size.height,
+    );
+
+    // Helper to draw on any page
+    void drawTextOnPage({
+      required int pageIndex,
+      required String text,
+      required double percentX,
+      required double percentY,
+      required double percentWidth,
+      required double percentHeight,
+      required PdfFont font,
+    }) {
+      final page = document.pages[pageIndex];
+      final double x = percentX * pageSize.width;
+      final double y = percentY * pageSize.height;
+      final double width = percentWidth * pageSize.width;
+      final double height = percentHeight * pageSize.height;
+
+      page.graphics.drawString(
+        text,
+        font,
+        bounds: Rect.fromLTWH(x, y, width, height),
+      );
+    }
+
+    final font = PdfStandardFont(PdfFontFamily.helvetica, 12);
+
+    // Draw Text fields
+    for (var field in placedTextFields) {
+      drawTextOnPage(
+        pageIndex: field.pageIndex ?? 0,
+        text: field.value as String,
+        percentX: field.percentX,
+        percentY: field.percentY,
+        percentWidth: field.percentWidth,
+        percentHeight: field.percentHeight,
+        font: font,
+      );
+    }
+
+    // Draw Date fields
+    for (var field in placedDateFields) {
+      drawTextOnPage(
+        pageIndex: field.pageIndex ?? 0,
+        text: field.value as String,
+        percentX: field.percentX,
+        percentY: field.percentY,
+        percentWidth: field.percentWidth,
+        percentHeight: field.percentHeight,
+        font: font,
+      );
+    }
+
+    // Draw DateTime fields
+    for (var field in placedDateTimeFields) {
+      drawTextOnPage(
+        pageIndex: field.pageIndex ?? 0,
+        text: field.value as String,
+        percentX: field.percentX,
+        percentY: field.percentY,
+        percentWidth: field.percentWidth,
+        percentHeight: field.percentHeight,
+        font: font,
+      );
+    }
+
+    // Draw Signature fields
+    for (var field in placedSignatureFields) {
+      final page = document.pages[field.pageIndex ?? 0];
+      final double x = field.percentX * pageSize.width;
+      final double y = field.percentY * pageSize.height;
+      final double width = field.percentWidth * pageSize.width;
+      final double height = field.percentHeight * pageSize.height;
+
+      final signature = PdfBitmap(field.value as Uint8List);
+      page.graphics.drawImage(signature, Rect.fromLTWH(x, y, width, height));
+    }
+
     try {
-      if (!validateInputs()) {
-        Get.snackbar('Error', 'Please add at least one field to the document.');
-        return;
-      }
 
-      final File pdfFile = File(pdfPath);
-      if (!pdfFile.existsSync()) {
-        Get.snackbar('Error', 'PDF not found.');
-        return;
-      }
-
-      final PdfDocument document = PdfDocument(inputBytes: await pdfFile.readAsBytes());
-      final int pageIndex = currentPage.value - 1;
-      if (pageIndex < 0 || pageIndex >= document.pages.count) {
-        Get.snackbar('Error', 'Invalid page number.');
-        document.dispose();
-        return;
-      }
-
-      final PdfPage page = document.pages[pageIndex];
-      final Size pdfPageSize = Size(page.getClientSize().width, page.getClientSize().height);
-      final Size widgetSize = pdfViewSize ?? Size(Get.width, Get.height - 200); // Approximate PDF viewer size
-
-      Offset scaleOffset(Offset widgetOffset, Size widgetBoxSize, Size pdfBoxSize) {
-        final double scaleX = pdfBoxSize.width / widgetSize.width;
-        final double scaleY = pdfBoxSize.height / widgetSize.height;
-        return Offset(
-          widgetOffset.dx * scaleX,
-          pdfBoxSize.height - ((widgetOffset.dy + widgetBoxSize.height) * scaleY),
-        );
-      }
-
-      for (final field in placedTextFields) {
-        final Offset pos = scaleOffset(field.position, field.size, pdfPageSize);
-        page.graphics.drawString(
-          field.value as String,
-          PdfStandardFont(PdfFontFamily.helvetica, 12),
-          bounds: Rect.fromLTWH(pos.dx, pos.dy, field.size.width, field.size.height),
-        );
-      }
-
-      for (final field in placedDateFields) {
-        final Offset pos = scaleOffset(field.position, field.size, pdfPageSize);
-        page.graphics.drawString(
-          field.value as String,
-          PdfStandardFont(PdfFontFamily.helvetica, 12),
-          bounds: Rect.fromLTWH(pos.dx, pos.dy, field.size.width, field.size.height),
-        );
-      }
-
-      for (final field in placedDateTimeFields) {
-        final Offset pos = scaleOffset(field.position, field.size, pdfPageSize);
-        page.graphics.drawString(
-          field.value as String,
-          PdfStandardFont(PdfFontFamily.helvetica, 12),
-          bounds: Rect.fromLTWH(pos.dx, pos.dy, field.size.width, field.size.height),
-        );
-      }
-
-      for (final field in placedSignatureFields) {
-        final Offset pos = scaleOffset(field.position, field.size, pdfPageSize);
-        final PdfBitmap signatureBitmap = PdfBitmap(field.value as Uint8List);
-        page.graphics.drawImage(
-          signatureBitmap,
-          Rect.fromLTWH(pos.dx, pos.dy, field.size.width, field.size.height),
-        );
-      }
-
-      final Directory tempDir = await getTemporaryDirectory();
-      final String baseName = pdfName.isNotEmpty ? pdfName : 'signed_pdf_${DateTime.now().millisecondsSinceEpoch}';
-      final String signedPdfPath = await getUniquePdfFilePath(tempDir, baseName);
-      final File signedPdfFile = File(signedPdfPath);
-
-      await signedPdfFile.writeAsBytes(await document.save());
+    // Save to new file
+      final List<int> modifiedBytes = await document.save();
       document.dispose();
 
-      final bool uploadSuccess = await uploadSignedPdf(signedPdfPath);
+      final outputPath = '${file.parent.path}/signed_${file.uri.pathSegments.last}';
+      final File output = File(outputPath);
+      await output.writeAsBytes(modifiedBytes);
+
+      // await OpenFilex.open(outputPath);
+
+
+      final bool uploadSuccess = await uploadSignedPdf(outputPath);
 
       if (uploadSuccess) {
         try {
-          if (await signedPdfFile.exists()) {
-            await signedPdfFile.delete();
+          if (await output.exists()) {
+            await output.delete();
           }
+          Get.offNamed(Routes.TICKET_DETAIL_PAGE);
+
+          Future.delayed(Duration(milliseconds: 100), (){
+            Get.find<TicketDetailPageController>().GetTicketData(ticketNumber);
+          });
           Get.back();
-          Get.find<TicketDetailPageController>().GetTicketData(ticketNumber);
+          // Optionally refresh ticket data
+          
+
         } catch (e) {
           log('Failed to delete signed PDF: $e');
         }
         clearAllFields();
         Get.snackbar('Success', 'Signed PDF uploaded successfully!');
+        
         Get.back();
       } else {
         Get.snackbar('Upload Failed', 'Upload failed. PDF saved locally.');
       }
-
-      Get.back();
-    } catch (e, stack) {
-      Get.snackbar('Exception', 'Failed: to upload signed pdf');
-      log('Exception: $e\n$stack');
+    } catch(e){
+      log("Error saving PDF: $e");
+      Get.snackbar('Error', 'Failed to save PDF. Please try again.');
     }
   }
-
   Future<bool> uploadSignedPdf(String filePath) async {
     final partnerId = box.read('partnerId');
     try {
@@ -596,9 +555,19 @@ class PdfSignController extends GetxController {
           log('PDF uploaded successfully: $response.');
         }
       }
+      if (response.statusCode != 200) {
+        log('Failed to upload PDF: ${response.statusCode}');
+        Get.snackbar("Error", "Failed to upload PDF: ${response.statusCode}");
+        return false;
+      }else {
+        log('PDF uploaded successfully: $response.');
+        Get.snackbar("Success", "PDF uploaded successfully.");
+        // Get.back();
+      }
       return response.statusCode == 200;
     } catch (e) {
       log('Upload failed: $e');
+      Get.snackbar("Error", "Cannot able to upload PDF, please try again later.");
       return false;
     }
   }
@@ -635,7 +604,7 @@ class PdfSignController extends GetxController {
     placedDateTimeFields.clear();
     placedSignatureFields.clear();
     textController.clear();
-    selectedDate.value = null;
+    selectedDate.value = '';
     selectedDateTime.value = null;
     signatureController.clear();
     signatureImage.value = null;
@@ -662,6 +631,7 @@ class PlacedField {
   final dynamic value;
   final Size size;
   final FieldType type;
+  int? pageIndex;
 
   // Percent-based fields
   final double percentX;
@@ -679,6 +649,7 @@ class PlacedField {
     required this.percentY,
     required this.percentWidth,
     required this.percentHeight,
+    this.pageIndex,
   });
 
   PlacedField copyWith({

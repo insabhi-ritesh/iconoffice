@@ -96,14 +96,12 @@ Widget buildTimesheetForm(TicketDetailPageController controller, BuildContext co
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
-                              // timesheet.date != null
-                              //   ? 
-                                DateFormat('yyyy-MM-dd').format(timesheet.date),
-                                // : DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                               controller.selectedDate.value != null
+                                ? DateFormat('yyyy-MM-dd').format(controller.selectedDate.value!)
+                                : DateFormat('yyyy-MM-dd').format(timesheet.date),
                               style: const TextStyle(fontWeight: AppFontWeight.font6),
                               textAlign: TextAlign.center,
-                            ),
-                            
+                            ),                            
                           ),
                         ),
                         IconButton(

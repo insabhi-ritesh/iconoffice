@@ -1,13 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../../../../common/app_color.dart';
 import '../../../../common/fontSize.dart';
 import '../../controllers/pdf_sign_controller.dart';
 import 'input_container.dart';
-// ignore: depend_on_referenced_packages
-import 'package:intl/intl.dart';
-
 
 class DateInputContainer extends StatelessWidget {
   final PdfSignController controller;
@@ -16,12 +13,13 @@ class DateInputContainer extends StatelessWidget {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: controller.selectedDate.value ?? DateTime.now(),
+      initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
     if (picked != null) {
-      controller.selectedDate.value = picked;
+      final formattedDate = DateFormat('yyyy-MM-dd').format(picked);
+      controller.selectedDate.value = formattedDate;
       controller.dateError.value = '';
     }
   }
@@ -51,11 +49,11 @@ class DateInputContainer extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        controller.selectedDate.value != null
-                            ? DateFormat('yyyy-MM-dd').format(controller.selectedDate.value!)
+                        controller.selectedDate.value.isNotEmpty
+                            ? controller.selectedDate.value
                             : 'Select a date',
                         style: TextStyle(
-                          color: controller.selectedDate.value != null ? Colors.black : Colors.grey,
+                          color: controller.selectedDate.value.isNotEmpty ? Colors.black : Colors.grey,
                         ),
                       ),
                     ),

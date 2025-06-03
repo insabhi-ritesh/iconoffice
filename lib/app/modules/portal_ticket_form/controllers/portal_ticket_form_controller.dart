@@ -25,6 +25,7 @@ class PortalTicketFormController extends GetxController {
   final modelNoController = TextEditingController();
   final faultAreaController = TextEditingController();
   final descriptionController = TextEditingController();
+  final isSubmitButtonEnabled = false.obs;
 
   final box = GetStorage();
 
@@ -56,6 +57,11 @@ class PortalTicketFormController extends GetxController {
   ];
 
   Future<void> CreateTicket() async {
+    // if(isSubmitButtonEnabled.value == true) {
+    //   return;
+    // }
+    // isSubmitButtonEnabled.value = true; // Disable button to prevent multiple submissions
+    showPopProgress();
     var partnerId = box.read('partnerId');
 
     try {
@@ -115,6 +121,9 @@ class PortalTicketFormController extends GetxController {
       log("Error while creating the ticket:$e");
       Get.snackbar('Error', 'Failed to connect to the Server');
     }
+    // finally {
+    //   isSubmitButtonEnabled.value = false; // Reset button state
+    // }
   }
 
   @override
@@ -218,5 +227,60 @@ class PortalTicketFormController extends GetxController {
       }
       Get.offAllNamed(Routes.PORTAL_VIEW);
     });
+  }
+
+  void showPopProgress() {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Image at the top
+            SizedBox(
+              height: 200,
+              width: 200,
+              child: SvgPicture.asset(
+                'assets/icons/Group.svg', 
+                height: 80,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Title and message
+            const Text(
+              'Creating Ticket',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: AppFontSize.size2, fontWeight: AppFontWeight.font3,),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Please wait...\nCreating ticket may take a few seconds',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: AppFontSize.size3,
+              fontWeight: AppFontWeight.font3),
+              
+            ),
+
+            const SizedBox(height: 20),
+
+            // Loader at the bottom
+            LoadingAnimationWidget.fourRotatingDots(
+              color: AppColorList.Purple, size: AppFontSize.sizeLarge
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    // Future.delayed(const Duration(seconds: 5), () {
+    //   if (Get.isDialogOpen ?? false) {
+    //     Get.back();
+    //   }
+    //   Get.offAllNamed(Routes.PORTAL_VIEW);
+    // });
   }
 }

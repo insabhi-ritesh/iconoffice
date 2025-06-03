@@ -27,8 +27,9 @@ AppBar pdfAppBar(String pdfName, BuildContext context, String? pdfPath) {
             size: AppFontSize.sizeLarge,
           ),
           onPressed: () async {
-            !controller.isPortalUser.value ? 
-            await controller.saveAndUploadSignedPdf(context, pdfPath ?? '', pdfName)
+            !controller.isPortalUser.value ?
+            await controller.savePdfWithFields() 
+            // await controller.saveAndUploadSignedPdf(context, pdfPath ?? '', pdfName)
             : await controller.uploadSignedPdf(pdfPath ?? '');
           },
         ),
