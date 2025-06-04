@@ -29,6 +29,8 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
   var searchQuery = ''.obs;
   var userQuery = ''.obs;
   var form = false.obs;
+  final autoValidate = false.obs;
+  GlobalKey<FormState>? formKey;
   final ScrollController messageScrollController = ScrollController();
 
   // Timer? _messagePollingTimer;
@@ -44,6 +46,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
 
 
   void addNewTimesheet() {
+    autoValidate.value = false;
     timesheetInputs.add(TimesheetInput(productId: '', date: DateTime.now()));
     form.value = true;
   }
@@ -70,7 +73,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
   var resolution = TextEditingController();
   var resUser = TextEditingController();
   var productId = 0.obs;
-  var isEnabled = false.obs;
+  var isEnabled = true.obs;
   var is_portal_user = true.obs;
   late String ticketNumber;
   var selectedState =''.obs;
@@ -230,6 +233,9 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     } catch (e) {
       log("This is the error : $e");
       Get.snackbar('Error', 'Failed to submit timesheet');
+    }
+    finally{
+      isEnabled.value = true;
     }
   }
 

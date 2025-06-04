@@ -3,6 +3,15 @@ import 'package:flutter/widgets.dart';
 import '../../../../common/app_color.dart';
 
 Container ticketInfoBox(ticket, BuildContext context) {
+  var gfg = {'new' : 'New',
+              'assigned' : 'Assigned',
+              'work_in' : 'Work in Progress',
+              'closed' : 'Closed',
+              'reopened' : 'Reopened',
+              'need_info' : 'Needs More Information',
+              'needs_reply' : 'Needs Reply',
+              'solution' : 'Solution Suggested',
+            };
     return Container(
       width: MediaQuery.of(context).size.width * 0.9,
     padding: const EdgeInsets.all(16),
@@ -23,7 +32,7 @@ Container ticketInfoBox(ticket, BuildContext context) {
         ticketInfoRow('Ticket Reference', ticket.tref1.trim() ?? '---'),
         ticketInfoRow('Serial No', ticket.serialNo1.trim() ?? '---'),
         ticketInfoRow('Model No', ticket.model_number1 ?? '---'),
-        ticketInfoRow('Status', ticket.state1 ?? '---'),
+        ticketInfoRow('Status', gfg[ticket.state1] ?? '---'),
         ticketInfoRow('Fault Area', ticket.faultArea1 ?? '---'),
         ticketInfoRow('Description', ticket.Description1?? '---'),
       ],
