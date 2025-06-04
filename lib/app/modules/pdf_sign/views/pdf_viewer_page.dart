@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
@@ -12,7 +11,7 @@ class PdfViewerPage extends StatelessWidget {
     super.key, 
     required this.url, 
     this.name,
-    this.isLocal = true
+    required this.isLocal
   });
 
   @override

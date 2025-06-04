@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:dio/dio.dart';
+// ignore: implementation_imports
 import 'package:file_picker/src/platform_file.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -138,12 +139,6 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
   }
 
   Future<void> updateTicketState(String ticket_number, String newState) async {
-
-    //Uncomment this code if you don't want to proceed with ticket status = closed:-
-    // if (newState == 'closed'){
-    //   Get.snackbar('Warning', 'You cannot close a ticket that is not assigned to you.');
-    //   return;
-    // }
     try {
       var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.UPDATE_STATE}?ticket_no=$ticket_number&new_state=$newState');
       log('Update the ticket state: $URL');
@@ -170,11 +165,6 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       Get.snackbar('Error', 'Failed to update ticket state');
     }
   }
-
-  
-  
-  
-  
   Future<void> submitTimesheets(String ticketId, DateTime? date, String State) async {
     var ticket_id = ticketId;
     var productId = productName.text;
@@ -182,6 +172,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     var hour = hours.text;
     var user = resUser.text;
     var enable = isEnabled.value;
+    var resolve = resolution.text;
     var dateStr = selectedDate.value?.toIso8601String();
     var id = productId;
 
@@ -206,6 +197,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
         'user': user,
         'enable': enable,
         'id': id,
+        'resolution': resolve,
       };
 
       log("Create timesheet: $URL");
@@ -228,7 +220,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
           _clearTimesheetForm(); 
           removeTimesheet();
         } else {
-          Get.snackbar('Error', data['message'] ?? 'Something went wrong');
+          Get.snackbar('Error', data['result']['message']);
         }
       } else {
         Get.snackbar('Error', 'Failed to submit timesheet');
@@ -245,10 +237,10 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     productName.clear();
     hours.clear();
     resUser.clear();
+    resolution.clear();
     selectedDate.value = null;
     isEnabled.value = false;
   }
-
 
   Future<void> getProductData (String search_product) async{
     if(product_list.isNotEmpty){
@@ -491,6 +483,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       await Get.to(() => PdfViewerPage(
         url: file.path ?? '',
         name: file.name,
+        isLocal: true,
       ));
     }
     else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'pdf'].contains(ext)) {

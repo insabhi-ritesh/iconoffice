@@ -97,6 +97,8 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
           }
         } else {
           isLoading.value = false;
+          Get.snackbar("Error", "Wrong login and password");
+          log("Login failed with response: ${response.body}");
         }
       } else {
         isLoading.value = false;

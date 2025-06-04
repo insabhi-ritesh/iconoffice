@@ -5,14 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:insabhi_icon_office/app/modules/ticket_detail_page/controllers/ticket_detail_page_controller.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:signature/signature.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
-import 'package:path_provider/path_provider.dart';
+// import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import '../../../Constants/constant.dart';
-import '../../../models/input_field.dart';
+import '../../../common/app_color.dart';
+import '../../../common/fontSize.dart';
+import '../../../routes/app_pages.dart';
+// import '../../../routes/app_pages.dart';
 
 enum FieldType {
   none,
@@ -23,7 +26,6 @@ enum FieldType {
 }
 
 class PdfSignController extends GetxController {
-  // PDF and signature
   final RxString pdfPath = ''.obs;
   final box = GetStorage();
   late String ticketNumber;
@@ -31,46 +33,201 @@ class PdfSignController extends GetxController {
 
   final PdfViewerController pdfViewerController = PdfViewerController();
   final RxInt currentPage = 1.obs;
+  final RxDouble zoomLevel = 1.0.obs;
+  final RxDouble zoomLevel1 = 1.0.obs;
+  final RxDouble zoomLevel2 = 1.0.obs;
 
-  // Selected field type
-  final Rx<FieldType> selectedFieldType = Rx<FieldType>(FieldType.none);
+
+    final Rx<FieldType> selectedFieldType = Rx<FieldType>(FieldType.none);
   final RxBool isPlacingField = false.obs;
   final RxBool isEditingField = false.obs;
 
-  // Text field
   final TextEditingController textController = TextEditingController();
   final RxString textError = ''.obs;
-  final RxList<PlacedField> placedTextFields = <PlacedField>[].obs;
 
-  // Date field
-  final Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
+  var selectedDate = ''.obs;
   final RxString dateError = ''.obs;
-  final RxList<PlacedField> placedDateFields = <PlacedField>[].obs;
 
-  // DateTime field
   final Rx<DateTime?> selectedDateTime = Rx<DateTime?>(null);
   final RxString dateTimeError = ''.obs;
-  final RxList<PlacedField> placedDateTimeFields = <PlacedField>[].obs;
   final Rx<Offset> dateTimePosition = Rx<Offset>(Offset.zero);
 
-  // Signature field
   final SignatureController signatureController = SignatureController(
     penStrokeWidth: 3,
     penColor: Colors.black,
     exportBackgroundColor: Colors.transparent,
   );
   final RxString signatureError = ''.obs;
-  final RxList<PlacedField> placedSignatureFields = <PlacedField>[].obs;
   final Rx<Uint8List?> signatureImage = Rx<Uint8List?>(null);
 
-  // Sizes for fields
+
+
+  final RxList<PlacedField> placedTextFields = <PlacedField>[].obs;
+  final RxList<PlacedField> placedDateFields = <PlacedField>[].obs;
+  final RxList<PlacedField> placedDateTimeFields = <PlacedField>[].obs;
+  final RxList<PlacedField> placedSignatureFields = <PlacedField>[].obs;
+
+
   final Size signatureBoxSize = const Size(150, 60);
   final Size textBoxSize = const Size(150, 40);
   final Size dateBoxSize = const Size(150, 40);
   final Size dateTimeBoxSize = const Size(180, 40);
 
+
+  Future<void> placeFieldAtPercent(double percentX, double percentY) async {
+    if (!isPlacingField.value) return;
+
+    switch (selectedFieldType.value) {
+      case FieldType.text:
+        placedTextFields.add(
+          PlacedField(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            position: Offset.zero, 
+            value: textController.text,
+            size: textBoxSize,
+            type: FieldType.text,
+            percentX: percentX,
+            percentY: percentY,
+            percentWidth: textBoxSize.width / 400, 
+            percentHeight: textBoxSize.height / 600, 
+          ),
+        );
+        textController.clear();
+        break;
+      case FieldType.date:
+        if (selectedDate.value != '') {
+          placedDateFields.add(
+            PlacedField(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              position: Offset.zero,
+              value: selectedDate.value.toString(),
+              size: dateBoxSize,
+              type: FieldType.date,
+              percentX: percentX,
+              percentY: percentY,
+              percentWidth: dateBoxSize.width / 400,
+              percentHeight: dateBoxSize.height / 600,
+            ),
+          );
+          selectedDate.value = '';
+        }
+        break;
+      case FieldType.dateTime:
+        if (selectedDateTime.value != null) {
+          placedDateTimeFields.add(
+            PlacedField(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              position: Offset.zero,
+              value: selectedDateTime.value.toString(),
+              size: dateTimeBoxSize,
+              type: FieldType.dateTime,
+              percentX: percentX,
+              percentY: percentY,
+              percentWidth: dateTimeBoxSize.width / 400,
+              percentHeight: dateTimeBoxSize.height / 600,
+            ),
+          );
+          selectedDateTime.value = null;
+        }
+        break;
+      case FieldType.signature:
+        final Uint8List? signatureImg = await signatureController.toPngBytes();
+        if (signatureImg != null) {
+          placedSignatureFields.add(
+            PlacedField(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              position: Offset.zero,
+              value: signatureImg,
+              size: signatureBoxSize,
+              type: FieldType.signature,
+              percentX: percentX,
+              percentY: percentY,
+              percentWidth: signatureBoxSize.width / 400,
+              percentHeight: signatureBoxSize.height / 600,
+            ),
+          );
+          signatureController.clear();
+          signatureImage.value = null;
+        }
+        break;
+      default:
+        break;
+    }
+
+    isPlacingField.value = false;
+    selectedFieldType.value = FieldType.none;
+    clearFieldSelection();
+  }
+
+  /// Update percent-based position for a field
+  void updateFieldPercentPosition(PlacedField field, double percentX, double percentY) {
+    switch (field.type) {
+      case FieldType.text:
+        final index = placedTextFields.indexWhere((f) => f.id == field.id);
+        if (index != -1) {
+          placedTextFields[index] = field.copyWith(percentX: percentX, percentY: percentY);
+        }
+        break;
+      case FieldType.date:
+        final index = placedDateFields.indexWhere((f) => f.id == field.id);
+        if (index != -1) {
+          placedDateFields[index] = field.copyWith(percentX: percentX, percentY: percentY);
+        }
+        break;
+      case FieldType.dateTime:
+        final index = placedDateTimeFields.indexWhere((f) => f.id == field.id);
+        if (index != -1) {
+          placedDateTimeFields[index] = field.copyWith(percentX: percentX, percentY: percentY);
+        }
+        break;
+      case FieldType.signature:
+        final index = placedSignatureFields.indexWhere((f) => f.id == field.id);
+        if (index != -1) {
+          placedSignatureFields[index] = field.copyWith(percentX: percentX, percentY: percentY);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  /// Update percent-based size for a field
+  void updateFieldPercentSize(PlacedField field, double percentWidth, double percentHeight) {
+    switch (field.type) {
+      case FieldType.text:
+        final index = placedTextFields.indexWhere((f) => f.id == field.id);
+        if (index != -1) {
+          placedTextFields[index] = field.copyWith(percentWidth: percentWidth, percentHeight: percentHeight);
+          zoomLevel.value = 1 + (percentWidth + percentHeight);
+        }
+        break;
+      case FieldType.date:
+        final index = placedDateFields.indexWhere((f) => f.id == field.id);
+        if (index != -1) {
+          placedDateFields[index] = field.copyWith(percentWidth: percentWidth, percentHeight: percentHeight);
+          zoomLevel1.value = 1 + (percentWidth + percentHeight);
+        }
+        break;
+      case FieldType.dateTime:
+        final index = placedDateTimeFields.indexWhere((f) => f.id == field.id);
+        if (index != -1) {
+          placedDateTimeFields[index] = field.copyWith(percentWidth: percentWidth, percentHeight: percentHeight);
+          zoomLevel2.value = 1 + (percentWidth + percentHeight);
+        }
+        break;
+      case FieldType.signature:
+        final index = placedSignatureFields.indexWhere((f) => f.id == field.id);
+        if (index != -1) {
+          placedSignatureFields[index] = field.copyWith(percentWidth: percentWidth, percentHeight: percentHeight);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   // Select field type
-  void selectFieldType(FieldType  type) {
+  void selectFieldType(FieldType type) {
     selectedFieldType.value = type;
     isEditingField.value = true;
     isPlacingField.value = false;
@@ -81,13 +238,14 @@ class PdfSignController extends GetxController {
     selectedFieldType.value = FieldType.none;
     isEditingField.value = false;
     isPlacingField.value = false;
+    textError.value = '';
+    dateError.value = '';
+    dateTimeError.value = '';
+    signatureError.value = '';
   }
 
-  // Prepare to place field on PDF
   void prepareToPlaceField() {
-    // Validate the current field data before placing
     bool isValid = true;
-    
     switch (selectedFieldType.value) {
       case FieldType.text:
         if (textController.text.trim().isEmpty) {
@@ -98,7 +256,7 @@ class PdfSignController extends GetxController {
         }
         break;
       case FieldType.date:
-        if (selectedDate.value == null) {
+        if (selectedDate.value == '') {
           dateError.value = 'Date is required';
           isValid = false;
         } else {
@@ -119,7 +277,6 @@ class PdfSignController extends GetxController {
           isValid = false;
         } else {
           signatureError.value = '';
-          // Export signature image for preview
           signatureController.toPngBytes().then((value) {
             signatureImage.value = value;
           });
@@ -135,73 +292,6 @@ class PdfSignController extends GetxController {
     }
   }
 
-  // Place field at the tapped position
-  Future<void> placeFieldAt(Offset position) async {
-    if (!isPlacingField.value) return;
-
-    switch (selectedFieldType.value) {
-      case FieldType.text:
-        placedTextFields.add(
-          PlacedField(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            position: position,
-            value: textController.text,
-            size: textBoxSize,
-          ),
-        );
-        textController.clear();
-        break;
-      case FieldType.date:
-        if (selectedDate.value != null) {
-          placedDateFields.add(
-            PlacedField(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              position: position,
-              value: DateFormat('yyyy-MM-dd').format(selectedDate.value!),
-              size: dateBoxSize,
-            ),
-          );
-          selectedDate.value = null;
-        }
-        break;
-      case FieldType.dateTime:
-        if (selectedDateTime.value != null) {
-          placedDateTimeFields.add(
-            PlacedField(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              position: position,
-              value: DateFormat('yyyy-MM-dd HH:mm').format(selectedDateTime.value!),
-              size: dateTimeBoxSize,
-            ),
-          );
-          selectedDateTime.value = null;
-        }
-        break;
-      case FieldType.signature:
-        final Uint8List? signatureImg = await signatureController.toPngBytes();
-        if (signatureImg != null) {
-          placedSignatureFields.add(
-            PlacedField(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              position: position,
-              value: signatureImg,
-              size: signatureBoxSize,
-            ),
-          );
-          signatureController.clear();
-          signatureImage.value = null;
-        }
-        break;
-      default:
-        break;
-    }
-
-    // Reset state after placing
-    isPlacingField.value = false;
-    selectedFieldType.value = FieldType.none;
-  }
-
-  // Move a placed field
   void moveField(String id, FieldType type, Offset delta) {
     switch (type) {
       case FieldType.text:
@@ -245,7 +335,41 @@ class PdfSignController extends GetxController {
     }
   }
 
-  // Remove a placed field
+  void resizeField(String id, FieldType type, Size newSize) {
+    switch (type) {
+      case FieldType.text:
+        final index = placedTextFields.indexWhere((field) => field.id == id);
+        if (index != -1) {
+          final field = placedTextFields[index];
+          placedTextFields[index] = field.copyWith(size: newSize);
+        }
+        break;
+      case FieldType.date:
+        final index = placedDateFields.indexWhere((field) => field.id == id);
+        if (index != -1) {
+          final field = placedDateFields[index];
+          placedDateFields[index] = field.copyWith(size: newSize);
+        }
+        break;
+      case FieldType.dateTime:
+        final index = placedDateTimeFields.indexWhere((field) => field.id == id);
+        if (index != -1) {
+          final field = placedDateTimeFields[index];
+          placedDateTimeFields[index] = field.copyWith(size: newSize);
+        }
+        break;
+      case FieldType.signature:
+        final index = placedSignatureFields.indexWhere((field) => field.id == id);
+        if (index != -1) {
+          final field = placedSignatureFields[index];
+          placedSignatureFields[index] = field.copyWith(size: newSize);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   void removeField(String id, FieldType type) {
     switch (type) {
       case FieldType.text:
@@ -265,134 +389,159 @@ class PdfSignController extends GetxController {
     }
   }
 
-  // Validation
   bool validateInputs() {
-    return placedTextFields.isNotEmpty || 
-           placedDateFields.isNotEmpty || 
-           placedDateTimeFields.isNotEmpty || 
-           placedSignatureFields.isNotEmpty;
+    return placedTextFields.isNotEmpty ||
+        placedDateFields.isNotEmpty ||
+        placedDateTimeFields.isNotEmpty ||
+        placedSignatureFields.isNotEmpty;
   }
-  Future<void> saveAndUploadSignedPdf(
-    BuildContext context,
-    String pdfPath,
-    String pdfName, {
-    Size? pdfViewSize,
-  }) async {
-    File? signedPdfFile;
-    bool uploadSuccess = false;
+
+  void updateFieldPosition(PlacedField field, Offset delta) {
+    moveField(field.id, field.type, delta);
+  }
+
+  void removeField1(PlacedField field, FieldType type) {
+    removeField(field.id, type);
+  }
+
+  void updateFieldSize(PlacedField field, Size newSize) {
+    resizeField(field.id, field.type, newSize);
+  }
+
+  Future<void> savePdfWithFields() async {
+    final File file = File(pdfPath.value);
+    if (!file.existsSync()) {
+      print('PDF not found');
+      return;
+    }
+
+    final Uint8List originalBytes = await file.readAsBytes();
+    final PdfDocument document = PdfDocument(inputBytes: originalBytes);
+
+    final Size pageSize = Size(
+      document.pages[0].size.width,
+      document.pages[0].size.height,
+    );
+
+    // Helper to draw on any page
+    void drawTextOnPage({
+      required int pageIndex,
+      required String text,
+      required double percentX,
+      required double percentY,
+      required double percentWidth,
+      required double percentHeight,
+      required PdfFont font,
+    }) {
+      final page = document.pages[pageIndex];
+      final double x = percentX * pageSize.width;
+      final double y = percentY * pageSize.height;
+      final double width = percentWidth * pageSize.width;
+      final double height = percentHeight * pageSize.height;
+
+      page.graphics.drawString(
+        text,
+        font,
+        bounds: Rect.fromLTWH(x, y, width, height),
+      );
+    }
+
+    final font = PdfStandardFont(PdfFontFamily.helvetica, 12);
+
+    // Draw Text fields
+    for (var field in placedTextFields) {
+      drawTextOnPage(
+        pageIndex: field.pageIndex ?? 0,
+        text: field.value as String,
+        percentX: field.percentX,
+        percentY: field.percentY,
+        percentWidth: field.percentWidth,
+        percentHeight: field.percentHeight,
+        font: font,
+      );
+    }
+
+    // Draw Date fields
+    for (var field in placedDateFields) {
+      drawTextOnPage(
+        pageIndex: field.pageIndex ?? 0,
+        text: field.value as String,
+        percentX: field.percentX,
+        percentY: field.percentY,
+        percentWidth: field.percentWidth,
+        percentHeight: field.percentHeight,
+        font: font,
+      );
+    }
+
+    // Draw DateTime fields
+    for (var field in placedDateTimeFields) {
+      drawTextOnPage(
+        pageIndex: field.pageIndex ?? 0,
+        text: field.value as String,
+        percentX: field.percentX,
+        percentY: field.percentY,
+        percentWidth: field.percentWidth,
+        percentHeight: field.percentHeight,
+        font: font,
+      );
+    }
+
+    // Draw Signature fields
+    for (var field in placedSignatureFields) {
+      final page = document.pages[field.pageIndex ?? 0];
+      final double x = field.percentX * pageSize.width;
+      final double y = field.percentY * pageSize.height;
+      final double width = field.percentWidth * pageSize.width;
+      final double height = field.percentHeight * pageSize.height;
+
+      final signature = PdfBitmap(field.value as Uint8List);
+      page.graphics.drawImage(signature, Rect.fromLTWH(x, y, width, height));
+    }
+    // showPopUp1();
+
     try {
-      if (!validateInputs()) {
-        Get.snackbar('Error', 'Please add at least one field to the document.');
-        return;
-      }
 
-      final File pdfFile = File(pdfPath);
-      if (!pdfFile.existsSync()) {
-        Get.snackbar('Error', 'PDF not found.');
-        return;
-      }
-
-      final PdfDocument document = PdfDocument(inputBytes: await pdfFile.readAsBytes());
-      final int pageIndex = currentPage.value - 1;
-      if (pageIndex < 0 || pageIndex >= document.pages.count) {
-        Get.snackbar('Error', 'Invalid page number.');
-        document.dispose();
-        return;
-      }
-
-      final PdfPage page = document.pages[pageIndex];
-      final Size pdfPageSize = Size(page.getClientSize().width, page.getClientSize().height);
-      final Size widgetSize = pdfViewSize ?? Size(Get.width, Get.height - 200); // Approximate PDF viewer size
-
-      // Helper to scale positions
-      Offset scaleOffset(Offset widgetOffset, Size widgetBoxSize, Size pdfBoxSize) {
-        final double scaleX = pdfBoxSize.width / widgetSize.width;
-        final double scaleY = pdfBoxSize.height / widgetSize.height;
-        return Offset(
-          widgetOffset.dx * scaleX, 
-          pdfBoxSize.height - ((widgetOffset.dy + widgetBoxSize.height) * scaleY)
-        );
-      }
-
-      // Draw text fields
-      for (final field in placedTextFields) {
-        final Offset pos = scaleOffset(field.position, field.size, pdfPageSize);
-        page.graphics.drawString(
-          field.value as String,
-          PdfStandardFont(PdfFontFamily.helvetica, 12),
-          bounds: Rect.fromLTWH(pos.dx, pos.dy, field.size.width, field.size.height),
-        );
-      }
-
-      // Draw date fields
-      for (final field in placedDateFields) {
-        final Offset pos = scaleOffset(field.position, field.size, pdfPageSize);
-        page.graphics.drawString(
-          field.value as String,
-          PdfStandardFont(PdfFontFamily.helvetica, 12),
-          bounds: Rect.fromLTWH(pos.dx, pos.dy, field.size.width, field.size.height),
-        );
-      }
-
-      // Draw datetime fields
-      for (final field in placedDateTimeFields) {
-        final Offset pos = scaleOffset(field.position, field.size, pdfPageSize);
-        page.graphics.drawString(
-          field.value as String,
-          PdfStandardFont(PdfFontFamily.helvetica, 12),
-          bounds: Rect.fromLTWH(pos.dx, pos.dy, field.size.width, field.size.height),
-        );
-      }
-
-      // Draw signature fields
-      for (final field in placedSignatureFields) {
-        final Offset pos = scaleOffset(field.position, field.size, pdfPageSize);
-        final PdfBitmap signatureBitmap = PdfBitmap(field.value as Uint8List);
-        page.graphics.drawImage(
-          signatureBitmap,
-          Rect.fromLTWH(pos.dx, pos.dy, field.size.width, field.size.height),
-        );
-      }
-
-      // Save PDF
-      final Directory tempDir = await getTemporaryDirectory();
-      // final String fileName = pdfName.isNotEmpty ? pdfName : 'signed_pdf_${DateTime.now().millisecondsSinceEpoch}';
-      // final String signedPdfPath = '${tempDir.path}/$fileName.pdf';
-      final String baseName = pdfName.isNotEmpty ? pdfName : 'signed_pdf_${DateTime.now().millisecondsSinceEpoch}';
-      final String signedPdfPath = await getUniquePdfFilePath(tempDir, baseName);
-      final File signedPdfFile = File(signedPdfPath);
-
-      await signedPdfFile.writeAsBytes(await document.save());
+    // Save to new file
+      final List<int> modifiedBytes = await document.save();
       document.dispose();
 
-      final bool uploadSuccess = await _uploadSignedPdf(signedPdfPath);
+      final outputPath = '${file.parent.path}/signed_${file.uri.pathSegments.last}';
+      final File output = File(outputPath);
+      await output.writeAsBytes(modifiedBytes);
+
+      // await OpenFilex.open(outputPath);
+
+
+      final bool uploadSuccess = await uploadSignedPdf(outputPath);
 
       if (uploadSuccess) {
         try {
-          if (await signedPdfFile.exists()) {
-            await signedPdfFile.delete();
+          if (await output.exists()) {
+            await output.delete();
           }
-          // Get.offAllNamed(Routes.TICKET_DETAIL_PAGE);
-          Get.back();
-          Get.find<TicketDetailPageController>().GetTicketData(ticketNumber);
+          // showPopUp2();
+          Get.offNamed(Routes.TICKET_DETAIL_PAGE);
+          Future.delayed(Duration(milliseconds: 100), (){
+             Get.find<TicketDetailPageController>().GetTicketData(ticketNumber);
+          });
+          Get.back();          
         } catch (e) {
           log('Failed to delete signed PDF: $e');
         }
         clearAllFields();
         Get.snackbar('Success', 'Signed PDF uploaded successfully!');
+        
         Get.back();
       } else {
         Get.snackbar('Upload Failed', 'Upload failed. PDF saved locally.');
       }
-
-      Get.back();
-    } catch (e, stack) {
-      Get.snackbar('Exception', 'Failed: to upload signed pdf');
-      log('Exception: $e\n$stack');
+    } catch(e){
+      log("Error saving PDF: $e");
+      Get.snackbar('Error', 'Failed to save PDF. Please try again.');
     }
   }
-
-  Future<bool> _uploadSignedPdf(String filePath) async {
+  Future<bool> uploadSignedPdf(String filePath) async {
     final partnerId = box.read('partnerId');
     try {
       final request = http.MultipartRequest(
@@ -401,9 +550,25 @@ class PdfSignController extends GetxController {
       );
       request.files.add(await http.MultipartFile.fromPath('file', filePath));
       final response = await request.send();
+
+      if(isPortalUser.value) {
+        if (response.statusCode == 200) {
+          log('PDF uploaded successfully: $response.');
+        }
+      }
+      if (response.statusCode != 200) {
+        log('Failed to upload PDF: ${response.statusCode}');
+        Get.snackbar("Error", "Failed to upload PDF: ${response.statusCode}");
+        return false;
+      }else {
+        log('PDF uploaded successfully: $response.');
+        Get.snackbar("Success", "PDF uploaded successfully.");
+        // Get.back();
+      }
       return response.statusCode == 200;
     } catch (e) {
       log('Upload failed: $e');
+      Get.snackbar("Error", "Cannot able to upload PDF, please try again later.");
       return false;
     }
   }
@@ -421,8 +586,78 @@ class PdfSignController extends GetxController {
     super.onInit();
     isPortalUser.value = box.read('is_portal_user') ?? false;
     final args = Get.arguments as Map<String, dynamic>? ?? {};
-    ticketNumber = args['ticketNumber'] ?? '';
+    ticketNumber = args['ticket_number'] ?? '';
     pdfPath.value = args['pdfPath'] ?? '';
+    listenToZoom();  // <<--- Start listening to zoom changes
+  }
+
+  //Listen to zoom changes (call this in your view's initState)
+  void listenToZoom() {
+    pdfViewerController.addListener(() {
+      zoomLevel.value = pdfViewerController.zoomLevel;
+    });
+  }
+
+  void showPopUp1() {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            const Text(
+              'Please wait...\nPreparing PDF for uploading',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: AppFontSize.size3,
+              fontWeight: AppFontWeight.font3),
+              
+            ),
+
+            const SizedBox(height: 20),
+
+            // Loader at the bottom
+            LoadingAnimationWidget.fourRotatingDots(
+              color: AppColorList.AppColor, size: AppFontSize.sizeLarge
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void showPopUp2() {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'PDF uploaded successfully',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: AppFontSize.size3,
+              fontWeight: AppFontWeight.font3),
+              
+            ),
+
+            const SizedBox(height: 20),
+
+            // Loader at the bottom
+            LoadingAnimationWidget.fourRotatingDots(
+              color: AppColorList.AppColor, size: AppFontSize.sizeLarge
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
   }
 
 
@@ -432,72 +667,13 @@ class PdfSignController extends GetxController {
     placedDateTimeFields.clear();
     placedSignatureFields.clear();
     textController.clear();
-    selectedDate.value = null;
+    selectedDate.value = '';
     selectedDateTime.value = null;
     signatureController.clear();
     signatureImage.value = null;
-
-    // Optionally clear the PDF path if you want to reset the state
-    // pdfPath.value = '';
-  }
-
-  
-  // Add this method to your PdfSignController class
-  void updateFieldPosition(PlacedField field, Offset delta) {
-    // Update the field's position by adding the delta from the drag gesture
-    field.position = Offset(
-      field.position.dx + delta.dx,
-      field.position.dy + delta.dy,
-    );
-    
-    // Trigger UI update
-    update();
-    
-    // If you're using specific lists for different field types, you may need to update
-    // the specific list that contains this field
-    if (placedTextFields.contains(field)) {
-      placedTextFields.refresh();
-    } else if (placedDateFields.contains(field)) {
-      placedDateFields.refresh();
-    } else if (placedDateTimeFields.contains(field)) {
-      placedDateTimeFields.refresh();
-    } else if (placedSignatureFields.contains(field)) {
-      placedSignatureFields.refresh();
-    }
-  }
-
-  // You might also need the removeField method if it's not already implemented
-  void removeField1(PlacedField field, FieldType type) {
-    switch (type) {
-      case FieldType.text:
-        placedTextFields.remove(field);
-        break;
-      case FieldType.date:
-        placedDateFields.remove(field);
-        break;
-      case FieldType.dateTime:
-        placedDateTimeFields.remove(field);
-        break;
-      case FieldType.signature:
-        placedSignatureFields.remove(field);
-        break;
-      case FieldType.none:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-    }
-    update();
-  }
-  void updateFieldSize(PlacedField field, Size newSize) {
-    field.size = newSize; // If Rx<Size>, use field.size.value = newSize;
-    placedTextFields.refresh();
-    placedDateFields.refresh();
-    placedDateTimeFields.refresh();
-    placedSignatureFields.refresh();
   }
 }
 
-
-// Helper function to generate unique PDF file paths
 Future<String> getUniquePdfFilePath(Directory directory, String baseName) async {
   String sanitizedBaseName = baseName.trim().replaceAll(RegExp(r'\.pdf$', caseSensitive: false), '');
   String fileName = '$sanitizedBaseName.pdf';
@@ -512,8 +688,54 @@ Future<String> getUniquePdfFilePath(Directory directory, String baseName) async 
   return filePath;
 }
 
+class PlacedField {
+  final String id;
+  final Offset position;
+  final dynamic value;
+  final Size size;
+  final FieldType type;
+  int? pageIndex;
 
+  // Percent-based fields
+  final double percentX;
+  final double percentY;
+  final double percentWidth;
+  final double percentHeight;
 
-extension on PdfDocument {
-  get ready => null;
+  PlacedField({
+    required this.id,
+    required this.position,
+    required this.value,
+    required this.size,
+    required this.type,
+    required this.percentX,
+    required this.percentY,
+    required this.percentWidth,
+    required this.percentHeight,
+    this.pageIndex,
+  });
+
+  PlacedField copyWith({
+    String? id,
+    Offset? position,
+    dynamic value,
+    Size? size,
+    FieldType? type,
+    double? percentX,
+    double? percentY,
+    double? percentWidth,
+    double? percentHeight,
+  }) {
+    return PlacedField(
+      id: id ?? this.id,
+      position: position ?? this.position,
+      value: value ?? this.value,
+      size: size ?? this.size,
+      type: type ?? this.type,
+      percentX: percentX ?? this.percentX,
+      percentY: percentY ?? this.percentY,
+      percentWidth: percentWidth ?? this.percentWidth,
+      percentHeight: percentHeight ?? this.percentHeight,
+    );
+  }
 }

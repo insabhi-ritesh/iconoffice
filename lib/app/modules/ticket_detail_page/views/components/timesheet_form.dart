@@ -14,7 +14,7 @@ Widget buildTimesheetForm(TicketDetailPageController controller, BuildContext co
       return Column(
         children: [
           ...controller.timesheetInputs.asMap().entries.map((entry) {
-            int index = entry.key;
+            // int index = entry.key;
             TimesheetInput timesheet = entry.value;
             return Card(
               child: Padding(
@@ -71,40 +71,40 @@ Widget buildTimesheetForm(TicketDetailPageController controller, BuildContext co
                     IsEnabledButton(controller,),
                     
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        const Text("Date: "),
-                        TextButton(
-                          onPressed: () async {
-                            final picked = await showDatePicker(
-                              context: Get.context!,
-                              initialDate: timesheet.date ?? DateTime.now(),
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(2100),
-                            );
-                            if (picked != null) {
-                              controller.updateDate(picked);
-                              timesheet.date = picked;
-                              controller.update();
-                            }
-                          },
-                          child: Container(
-                            width: 100,
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColorList.AppText, width: 0.4),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Text(
-                              timesheet.date != null
-                                ? DateFormat('yyyy-MM-dd').format(timesheet.date!)
-                                : DateFormat('yyyy-MM-dd').format(DateTime.now()),
-                              style: const TextStyle(fontWeight: AppFontWeight.font6),
-                              textAlign: TextAlign.center,
-                            ),
-                            
-                          ),
-                        ),
+                        // const Text("Date: "),
+                        // TextButton(
+                        //   onPressed: () async {
+                        //     final picked = await showDatePicker(
+                        //       context: Get.context!,
+                        //       initialDate: timesheet.date,
+                        //       firstDate: DateTime(2020),
+                        //       lastDate: DateTime(2100),
+                        //     );
+                        //     if (picked != null) {
+                        //       controller.updateDate(picked);
+                        //       timesheet.date = picked;
+                        //       controller.update();
+                        //     }
+                        //   },
+                        //   child: Container(
+                        //     width: 100,
+                        //     padding: const EdgeInsets.all(8.0),
+                        //     decoration: BoxDecoration(
+                        //       border: Border.all(color: AppColorList.AppText, width: 0.4),
+                        //       borderRadius: BorderRadius.circular(16),
+                        //     ),
+                        //     child: Text(
+                        //        controller.selectedDate.value != null
+                        //         ? DateFormat('yyyy-MM-dd').format(controller.selectedDate.value!)
+                        //         : DateFormat('yyyy-MM-dd').format(timesheet.date),
+                        //       style: const TextStyle(fontWeight: AppFontWeight.font6),
+                        //       textAlign: TextAlign.center,
+                        //     ),                            
+                        //   ),
+                        // ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () => controller.removeTimesheet(),
