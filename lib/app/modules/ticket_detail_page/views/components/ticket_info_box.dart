@@ -2,8 +2,9 @@ import 'package:flutter/widgets.dart';
 
 import '../../../../common/app_color.dart';
 
-Container ticketInfoBox(ticket) {
+Container ticketInfoBox(ticket, BuildContext context) {
     return Container(
+      width: MediaQuery.of(context).size.width * 0.9,
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: AppColorList.ContainerBackground,

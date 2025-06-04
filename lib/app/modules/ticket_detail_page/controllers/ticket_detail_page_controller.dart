@@ -165,11 +165,6 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       Get.snackbar('Error', 'Failed to update ticket state');
     }
   }
-
-  
-  
-  
-  
   Future<void> submitTimesheets(String ticketId, DateTime? date, String State) async {
     var ticket_id = ticketId;
     var productId = productName.text;
@@ -177,6 +172,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     var hour = hours.text;
     var user = resUser.text;
     var enable = isEnabled.value;
+    var resolve = resolution.text;
     var dateStr = selectedDate.value?.toIso8601String();
     var id = productId;
 
@@ -201,6 +197,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
         'user': user,
         'enable': enable,
         'id': id,
+        'resolution': resolve,
       };
 
       log("Create timesheet: $URL");
@@ -223,7 +220,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
           _clearTimesheetForm(); 
           removeTimesheet();
         } else {
-          Get.snackbar('Error', data['message'] ?? 'Something went wrong');
+          Get.snackbar('Error', data['result']['message']);
         }
       } else {
         Get.snackbar('Error', 'Failed to submit timesheet');
@@ -240,10 +237,10 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     productName.clear();
     hours.clear();
     resUser.clear();
+    resolution.clear();
     selectedDate.value = null;
     isEnabled.value = false;
   }
-
 
   Future<void> getProductData (String search_product) async{
     if(product_list.isNotEmpty){

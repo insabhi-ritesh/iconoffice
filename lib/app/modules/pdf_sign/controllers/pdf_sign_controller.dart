@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:insabhi_icon_office/app/modules/ticket_detail_page/controllers/ticket_detail_page_controller.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:signature/signature.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 // import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import '../../../Constants/constant.dart';
+import '../../../common/app_color.dart';
+import '../../../common/fontSize.dart';
 import '../../../routes/app_pages.dart';
 // import '../../../routes/app_pages.dart';
 
@@ -495,6 +498,7 @@ class PdfSignController extends GetxController {
       final signature = PdfBitmap(field.value as Uint8List);
       page.graphics.drawImage(signature, Rect.fromLTWH(x, y, width, height));
     }
+    // showPopUp1();
 
     try {
 
@@ -516,15 +520,12 @@ class PdfSignController extends GetxController {
           if (await output.exists()) {
             await output.delete();
           }
+          // showPopUp2();
           Get.offNamed(Routes.TICKET_DETAIL_PAGE);
-
           Future.delayed(Duration(milliseconds: 100), (){
-            Get.find<TicketDetailPageController>().GetTicketData(ticketNumber);
+             Get.find<TicketDetailPageController>().GetTicketData(ticketNumber);
           });
-          Get.back();
-          // Optionally refresh ticket data
-          
-
+          Get.back();          
         } catch (e) {
           log('Failed to delete signed PDF: $e');
         }
@@ -595,6 +596,68 @@ class PdfSignController extends GetxController {
     pdfViewerController.addListener(() {
       zoomLevel.value = pdfViewerController.zoomLevel;
     });
+  }
+
+  void showPopUp1() {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            const Text(
+              'Please wait...\nPreparing PDF for uploading',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: AppFontSize.size3,
+              fontWeight: AppFontWeight.font3),
+              
+            ),
+
+            const SizedBox(height: 20),
+
+            // Loader at the bottom
+            LoadingAnimationWidget.fourRotatingDots(
+              color: AppColorList.AppColor, size: AppFontSize.sizeLarge
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void showPopUp2() {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'PDF uploaded successfully',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: AppFontSize.size3,
+              fontWeight: AppFontWeight.font3),
+              
+            ),
+
+            const SizedBox(height: 20),
+
+            // Loader at the bottom
+            LoadingAnimationWidget.fourRotatingDots(
+              color: AppColorList.AppColor, size: AppFontSize.sizeLarge
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
   }
 
 

@@ -62,7 +62,7 @@ class TicketDetailPageView extends StatelessWidget {
                   children: [
                     ticketHeader(context, controller, ticket),
                     const SizedBox(height: 16),
-                    ticketInfoBox(ticket),
+                    ticketInfoBox(ticket, context),
                     const SizedBox(height: 24),
                     const Divider(),
                     ticketSections(ticket, controller, context),
