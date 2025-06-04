@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -506,7 +507,11 @@ class PdfSignController extends GetxController {
       final List<int> modifiedBytes = await document.save();
       document.dispose();
 
-      final outputPath = '${file.parent.path}/signed_${file.uri.pathSegments.last}';
+      final Directory parentDir = file.parent;
+      final String randomSuffix = getRandomString(2);
+      final String baseName = 'signed_${randomSuffix}_${file.uri.pathSegments.last}';
+      final String outputPath = await getUniquePdfFilePath(parentDir, baseName);
+      // final outputPath = '${file.parent.path}/signed_${file.uri.pathSegments.last}';
       final File output = File(outputPath);
       await output.writeAsBytes(modifiedBytes);
 
@@ -517,9 +522,9 @@ class PdfSignController extends GetxController {
 
       if (uploadSuccess) {
         try {
-          if (await output.exists()) {
-            await output.delete();
-          }
+          // if (await output.exists()) {
+          //   await output.delete();
+          // }
           // showPopUp2();
           Get.offNamed(Routes.TICKET_DETAIL_PAGE);
           Future.delayed(Duration(milliseconds: 100), (){
@@ -527,17 +532,17 @@ class PdfSignController extends GetxController {
           });
           Get.back();          
         } catch (e) {
-          log('Failed to delete signed PDF: $e');
+          // log('Failed to delete signed PDF: $e');
         }
         clearAllFields();
         Get.snackbar('Success', 'Signed PDF uploaded successfully!');
         
-        Get.back();
+        // Get.back();
       } else {
         Get.snackbar('Upload Failed', 'Upload failed. PDF saved locally.');
       }
     } catch(e){
-      log("Error saving PDF: $e");
+      // log("Error saving PDF: $e");
       Get.snackbar('Error', 'Failed to save PDF. Please try again.');
     }
   }
@@ -553,24 +558,30 @@ class PdfSignController extends GetxController {
 
       if(isPortalUser.value) {
         if (response.statusCode == 200) {
-          log('PDF uploaded successfully: $response.');
+          // log('PDF uploaded successfully: $response.');
         }
       }
       if (response.statusCode != 200) {
-        log('Failed to upload PDF: ${response.statusCode}');
+        // log('Failed to upload PDF: ${response.statusCode}');
         Get.snackbar("Error", "Failed to upload PDF: ${response.statusCode}");
         return false;
       }else {
-        log('PDF uploaded successfully: $response.');
+        // log('PDF uploaded successfully: $response.');
         Get.snackbar("Success", "PDF uploaded successfully.");
         // Get.back();
       }
       return response.statusCode == 200;
     } catch (e) {
-      log('Upload failed: $e');
+      // log('Upload failed: $e');
       Get.snackbar("Error", "Cannot able to upload PDF, please try again later.");
       return false;
     }
+  }
+
+  String getRandomString(int length) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final rand = Random();
+    return List.generate(length, (index) => chars[rand.nextInt(chars.length)]).join();
   }
 
   @override
