@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../common/app_color.dart';
+import '../../../routes/app_pages.dart';
 import '../controllers/ticket_detail_page_controller.dart';
 import 'components/body_section.dart';
 import 'components/float_action_button.dart';
@@ -43,6 +44,12 @@ class TicketDetailPageView extends StatelessWidget {
       builder: (controller) {
         return Scaffold(
           appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Get.offAllNamed(Routes.HOME);
+                },
+            ),
             title: Text('Service Ticket Detail', style: TextStyle(color: AppColorList.WhiteText)),
             backgroundColor: AppColorList.AppButtonColor,
             iconTheme: IconThemeData(color: AppColorList.WhiteText),

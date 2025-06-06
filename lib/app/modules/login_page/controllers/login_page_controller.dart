@@ -23,7 +23,6 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
   @override
   void onInit() {
     super.onInit();
-
     animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),

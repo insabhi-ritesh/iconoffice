@@ -1,7 +1,5 @@
-
 import 'package:flutter/material.dart';
 import 'package:signature/signature.dart';
-
 import '../../../../common/app_color.dart';
 import '../../../../common/fontSize.dart';
 import '../../controllers/pdf_sign_controller.dart';
@@ -36,32 +34,32 @@ class SignatureInputContainer extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton.icon(
-                onPressed: () => controller.signatureController.clear(),
-                icon: Icon(Icons.refresh, color: AppColorList.Star1),
-                label: Text('Clear', style: TextStyle(color: AppColorList.Star1)),
-              ),
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () => controller.clearFieldSelection(),
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: () => controller.prepareToPlaceField(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColorList.Star1,
-                      foregroundColor: AppColorList.WhiteText,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton.icon(
+                  onPressed: () => controller.signatureController.clear(),
+                  icon: Icon(Icons.refresh, color: AppColorList.Star1),
+                  label: Text('Clear', style: TextStyle(color: AppColorList.Star1)),
+                ),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: () => controller.clearFieldSelection(),
+                      child: const Text('Cancel'),
                     ),
-                    child: const Text('Place on Document'),
-                  ),
-                ],
-              ),
-            ],
+                    // const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () => controller.prepareToPlaceField(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColorList.Star1,
+                        foregroundColor: AppColorList.WhiteText,
+                      ),
+                      child: const Text('Place on Document'),
+                    ),
+                  ],
+                ),
+              ],
           ),
         ],
       ),

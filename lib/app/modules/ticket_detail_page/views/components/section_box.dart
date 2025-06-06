@@ -58,7 +58,7 @@ Widget buildTimesheet(List<dynamic> timesheets, TicketDetailPageController contr
   );
 }
 
-Widget buildAttachments(List pdfDocs, controller, BuildContext context, var ticket) {
+Widget buildAttachments(List pdfDocs,TicketDetailPageController controller, BuildContext context, var ticket) {
     return pdfDocs.isNotEmpty
       ? Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,10 +72,13 @@ Widget buildAttachments(List pdfDocs, controller, BuildContext context, var tick
               ),
               onTap: () async {
                 final url = '${Constant.BASE_URL}${pdfDoc.url}';
-                final fileName = pdfDoc.name.replaceAll(' ', '_');
-                final localPath = await controller.downloadPdf(url, fileName, context);
+            //     'pdfPath' : pdfPath,
+            // 'pdfName' : pdfName,
+            // "ticket_number" : id,
+                // final fileName = pdfDoc.name.replaceAll(' ', '_');
+                final localPath = await controller.downloadPdf(url, pdfDoc.name, context);
                 if (localPath != null) {
-                  Get.to(() => PdfSignView(), arguments: {'pdfPath': localPath, 'pdfName': pdfDoc.name, 'ticketNumber': ticket.ticketNo1});
+                  Get.to(() => PdfSignView(), arguments: {'pdfPath': localPath, 'pdfName': pdfDoc.name, 'ticket_number': ticket.ticketNo1});
                 }
               },
             );

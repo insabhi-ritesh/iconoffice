@@ -1,9 +1,9 @@
 import 'dart:developer';
 import 'dart:io';
-import 'dart:math';
+// import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart'; 
 import 'package:get_storage/get_storage.dart';
 import 'package:insabhi_icon_office/app/modules/ticket_detail_page/controllers/ticket_detail_page_controller.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -16,6 +16,7 @@ import '../../../Constants/constant.dart';
 import '../../../common/app_color.dart';
 import '../../../common/fontSize.dart';
 import '../../../routes/app_pages.dart';
+// import '../../../routes/app_pages.dart';
 // import '../../../routes/app_pages.dart';
 
 enum FieldType {
@@ -411,6 +412,7 @@ class PdfSignController extends GetxController {
 
   Future<void> savePdfWithFields() async {
     final File file = File(pdfPath.value);
+    log('this is the file path $file');
     if (!file.existsSync()) {
       print('PDF not found');
       return;
@@ -432,59 +434,61 @@ class PdfSignController extends GetxController {
       required double percentY,
       required double percentWidth,
       required double percentHeight,
-      required PdfFont font,
     }) {
-      final page = document.pages[pageIndex];
-      final double x = percentX * pageSize.width;
-      final double y = percentY * pageSize.height;
-      final double width = percentWidth * pageSize.width;
-      final double height = percentHeight * pageSize.height;
+      final page  = document.pages[pageIndex];
+      final x     = percentX     * pageSize.width;
+      final y     = percentY     * pageSize.height;
+      final boxW  = percentWidth * pageSize.width;
+      final boxH  = percentHeight* pageSize.height;
+
+      // font size ≈ 80 % of the rectangle height; clamp to sane bounds
+      final fontSize = (boxH * .80).clamp(6, 48).toDouble();
+      final font     = PdfStandardFont(PdfFontFamily.helvetica, fontSize);
 
       page.graphics.drawString(
         text,
         font,
-        bounds: Rect.fromLTWH(x, y, width, height),
+        bounds: Rect.fromLTWH(x, y, boxW, boxH),
       );
     }
 
-    final font = PdfStandardFont(PdfFontFamily.helvetica, 12);
+
+    // final font = PdfStandardFont(PdfFontFamily.helvetica, 12);
 
     // Draw Text fields
-    for (var field in placedTextFields) {
+    for (final field in placedTextFields) {
       drawTextOnPage(
-        pageIndex: field.pageIndex ?? 0,
-        text: field.value as String,
-        percentX: field.percentX,
-        percentY: field.percentY,
-        percentWidth: field.percentWidth,
+        pageIndex    : field.pageIndex ?? 0,
+        text         : field.value as String,
+        percentX     : field.percentX,
+        percentY     : field.percentY,
+        percentWidth : field.percentWidth,
         percentHeight: field.percentHeight,
-        font: font,
       );
     }
+
 
     // Draw Date fields
     for (var field in placedDateFields) {
       drawTextOnPage(
-        pageIndex: field.pageIndex ?? 0,
-        text: field.value as String,
-        percentX: field.percentX,
-        percentY: field.percentY,
-        percentWidth: field.percentWidth,
+        pageIndex    : field.pageIndex ?? 0,
+        text         : field.value as String,
+        percentX     : field.percentX,
+        percentY     : field.percentY,
+        percentWidth : field.percentWidth,
         percentHeight: field.percentHeight,
-        font: font,
       );
     }
 
     // Draw DateTime fields
     for (var field in placedDateTimeFields) {
       drawTextOnPage(
-        pageIndex: field.pageIndex ?? 0,
-        text: field.value as String,
-        percentX: field.percentX,
-        percentY: field.percentY,
-        percentWidth: field.percentWidth,
+        pageIndex    : field.pageIndex ?? 0,
+        text         : field.value as String,
+        percentX     : field.percentX,
+        percentY     : field.percentY,
+        percentWidth : field.percentWidth,
         percentHeight: field.percentHeight,
-        font: font,
       );
     }
 
@@ -499,7 +503,7 @@ class PdfSignController extends GetxController {
       final signature = PdfBitmap(field.value as Uint8List);
       page.graphics.drawImage(signature, Rect.fromLTWH(x, y, width, height));
     }
-    // showPopUp1();
+    showPopUp1();
 
     try {
 
@@ -507,30 +511,39 @@ class PdfSignController extends GetxController {
       final List<int> modifiedBytes = await document.save();
       document.dispose();
 
-      final Directory parentDir = file.parent;
-      final String randomSuffix = getRandomString(2);
-      final String baseName = 'signed_${randomSuffix}_${file.uri.pathSegments.last}';
-      final String outputPath = await getUniquePdfFilePath(parentDir, baseName);
-      // final outputPath = '${file.parent.path}/signed_${file.uri.pathSegments.last}';
+      // final Directory parentDir = file.parent;
+      // final String randomSuffix = getRandomString(2);
+      final String baseName = '${file.uri.pathSegments.last}';
+      log(baseName.toString());
+      // final String outputPath = await getUniquePdfFilePath(parentDir, baseName);
+      final outputPath = '${file.parent.path}/${file.uri.pathSegments.last}';
       final File output = File(outputPath);
       await output.writeAsBytes(modifiedBytes);
+      pdfPath.value = output.path;
 
       // await OpenFilex.open(outputPath);
 
 
-      final bool uploadSuccess = await uploadSignedPdf(outputPath);
+      final bool uploadSuccess = await uploadSignedPdf(output.path);
 
       if (uploadSuccess) {
         try {
+          // Get.back(); // Close the upload dialog
           // if (await output.exists()) {
           //   await output.delete();
           // }
           // showPopUp2();
-          Get.offNamed(Routes.TICKET_DETAIL_PAGE);
-          Future.delayed(Duration(milliseconds: 100), (){
-             Get.find<TicketDetailPageController>().GetTicketData(ticketNumber);
+          // Get.offNamed(Routes.TICKET_DETAIL_PAGE, arguments: ticketNumber);
+          Get.until((route){
+            return route.settings.name == Routes.TICKET_DETAIL_PAGE;
           });
-          Get.back();          
+
+          final ticketController = Get.find<TicketDetailPageController>();
+          ticketController.GetTicketData(ticketNumber);
+          // Future.delayed(Duration(milliseconds: 100), (){
+          //   Get.find<TicketDetailPageController>().GetTicketData(ticketNumber);
+          // });
+          // Get.back();          
         } catch (e) {
           // log('Failed to delete signed PDF: $e');
         }
@@ -578,11 +591,11 @@ class PdfSignController extends GetxController {
     }
   }
 
-  String getRandomString(int length) {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    final rand = Random();
-    return List.generate(length, (index) => chars[rand.nextInt(chars.length)]).join();
-  }
+  // String getRandomString(int length) {
+  //   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  //   final rand = Random();
+  //   return List.generate(length, (index) => chars[rand.nextInt(chars.length)]).join();
+  // }
 
   @override
   void onClose() {
@@ -638,6 +651,9 @@ class PdfSignController extends GetxController {
       ),
       barrierDismissible: false,
     );
+    Future.delayed(const Duration(seconds: 2), () {
+      // Get.back(); // Close the dialog after 2 seconds
+    });
   }
 
   void showPopUp2() {
@@ -668,6 +684,9 @@ class PdfSignController extends GetxController {
       ),
       barrierDismissible: false,
     );
+    Future.delayed(const Duration(seconds: 2), () {
+      // Get.back(); // Close the dialog after 2 seconds
+    });
 
   }
 
@@ -689,12 +708,12 @@ Future<String> getUniquePdfFilePath(Directory directory, String baseName) async 
   String sanitizedBaseName = baseName.trim().replaceAll(RegExp(r'\.pdf$', caseSensitive: false), '');
   String fileName = '$sanitizedBaseName.pdf';
   String filePath = '${directory.path}/$fileName';
-  int counter = 1;
+  // int counter = 1;
 
   while (await File(filePath).exists()) {
-    fileName = '$sanitizedBaseName($counter).pdf';
+    fileName = '$sanitizedBaseName.pdf';
     filePath = '${directory.path}/$fileName';
-    counter++;
+    // counter++;
   }
   return filePath;
 }

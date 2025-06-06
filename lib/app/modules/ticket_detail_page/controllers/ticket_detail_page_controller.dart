@@ -100,8 +100,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     ).animate(CurvedAnimation(
       parent: bounceController,
       curve: Curves.easeInOut,
-    ));
-    
+    )); 
 
     ticketNumber = Get.arguments as String;
 
@@ -189,6 +188,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
       log("Ticket is closed $State");
       return;
     }
+    showPopUp2();
     try {
       var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.CREATE_HELPDESK_TIME_SHEET}');
       final body = {
@@ -236,8 +236,46 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     }
     finally{
       isEnabled.value = true;
+      if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
     }
   }
+
+  void showPopUp2() {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Please Wailt...\nUploading Timesheet',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: AppFontSize.size3,
+              fontWeight: AppFontWeight.font3),
+              
+            ),
+
+            const SizedBox(height: 20),
+
+            // Loader at the bottom
+            LoadingAnimationWidget.fourRotatingDots(
+              color: AppColorList.AppColor, size: AppFontSize.sizeLarge
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    Future.delayed(const Duration(seconds: 2), () {
+      Get.back(); // Close the dialog after 2 seconds
+    });
+
+  }
+
 
   void _clearTimesheetForm() {
     productName.clear();
