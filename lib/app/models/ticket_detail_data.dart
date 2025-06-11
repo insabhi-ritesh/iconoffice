@@ -132,16 +132,19 @@ class Timesheet {
 class PdfDocument {
   final String name;
   final String url;
+  final int attachment_id;
 
   PdfDocument({
     required this.name,
     required this.url,
+    required this.attachment_id,
   });
 
   factory PdfDocument.fromJson(Map<String, dynamic> json) {
     return PdfDocument(
       name: json['name'] ?? '',
       url: json['url'] ?? '',
+      attachment_id: json['attachment_id'] ?? 0,
     );
   }
 }

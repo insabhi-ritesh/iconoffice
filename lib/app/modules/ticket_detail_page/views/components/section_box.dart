@@ -58,35 +58,102 @@ Widget buildTimesheet(List<dynamic> timesheets, TicketDetailPageController contr
   );
 }
 
-Widget buildAttachments(List pdfDocs,TicketDetailPageController controller, BuildContext context, var ticket) {
-    return pdfDocs.isNotEmpty
+Widget buildAttachments(
+  List pdfDocs,
+  TicketDetailPageController controller,
+  BuildContext context,
+  var ticket,
+  {RxBool? isLoading}
+) {
+  // Use a loading state if provided, otherwise create a local one.
+  final RxBool loading = isLoading ?? false.obs;
+
+  return pdfDocs.isNotEmpty
       ? Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: pdfDocs.map<Widget>((pdfDoc) {
-            return ListTile(
-              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-              title: Text(pdfDoc.name),
-              trailing: IconButton(
-                icon: const Icon(Icons.open_in_new),
-                onPressed: () => Get.to(() => PdfViewerPage(url: '${Constant.BASE_URL}${pdfDoc.url}', name: pdfDoc.name, isLocal: false,)),
-              ),
-              onTap: () async {
-                final url = '${Constant.BASE_URL}${pdfDoc.url}';
-            //     'pdfPath' : pdfPath,
-            // 'pdfName' : pdfName,
-            // "ticket_number" : id,
-                // final fileName = pdfDoc.name.replaceAll(' ', '_');
-                final localPath = await controller.downloadPdf(url, pdfDoc.name, context);
-                if (localPath != null) {
-                  Get.to(() => PdfSignView(), arguments: {'pdfPath': localPath, 'pdfName': pdfDoc.name, 'ticket_number': ticket.ticketNo1});
-                }
-              },
-            );
-          }
-        ).toList(),
-      )
-    : const ListTile(title: Text('No Document Attachments'));
-  }
+            // Defensive: Ensure pdfDoc has required fields
+            final String name = pdfDoc.name ?? 'Unnamed';
+            final String url = pdfDoc.url ?? '';
+            final int? attachmentId = pdfDoc.attachment_id ?? _extractIdFromUrl(url);
+
+            return Obx(() => loading.value
+                ? const Center(child: CircularProgressIndicator())
+                : ListTile(
+                    leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                    title: Text(name),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.open_in_new),
+                          onPressed: () => Get.to(() => PdfViewerPage(
+                                url: '${Constant.BASE_URL}$url',
+                                name: name,
+                                isLocal: false,
+                              )),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                          tooltip: 'Delete Attachment',
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Delete Attachment'),
+                                content: const Text('Are you sure you want to delete this attachment?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(true),
+                                    child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true && attachmentId != null) {
+                              loading.value = true;
+                              try {
+                                await controller.deleteAttachment(attachmentId, ticket.ticketNo1);
+                                // Optionally, remove the deleted attachment from pdfDocs here if needed.
+                              } finally {
+                                loading.value = false;
+                              }
+                            } else if (attachmentId == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Attachment ID not found. Cannot delete.')),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    onTap: () async {
+                      final localPath = await controller.downloadPdf('${Constant.BASE_URL}$url', name, context);
+                      if (localPath != null) {
+                        Get.to(() => PdfSignView(), arguments: {
+                          'pdfPath': localPath,
+                          'pdfName': name,
+                          'ticket_number': ticket.ticketNo1
+                        });
+                      }
+                    },
+                  ));
+          }).toList(),
+        )
+      : const ListTile(title: Text('No Document Attachments'));
+}
+
+/// Helper to extract attachment ID from a URL like '/web/content/12568?download=true'
+int? _extractIdFromUrl(String url) {
+  final regExp = RegExp(r'/web/content/(\d+)');
+  final match = regExp.firstMatch(url);
+  return match != null ? int.tryParse(match.group(1)!) : null;
+}
+
 
 Widget buildMessageSection(ticket, controller, BuildContext context) {
     final callController = Get.find<TicketDetailPageController>();

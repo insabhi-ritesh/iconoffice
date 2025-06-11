@@ -13,7 +13,7 @@ Container ticketInfoBox(ticket, BuildContext context) {
               'solution' : 'Solution Suggested',
             };
     return Container(
-      width: MediaQuery.of(context).size.width * 0.9,
+      width: MediaQuery.of(context).size.width * 1,
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: AppColorList.ContainerBackground,

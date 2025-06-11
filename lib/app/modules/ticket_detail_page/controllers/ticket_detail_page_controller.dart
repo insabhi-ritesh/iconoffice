@@ -31,6 +31,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
   var form = false.obs;
   final autoValidate = false.obs;
   GlobalKey<FormState>? formKey;
+  var isLoading = false.obs;
   final ScrollController messageScrollController = ScrollController();
 
   // Timer? _messagePollingTimer;
@@ -556,6 +557,32 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
           ],
         ),
       );
+    }
+  }
+
+  Future<void> deleteAttachment(int pdfDoc, String ticket)async {
+    isLoading.value = true;
+    // Delete attachment from pdfDoc
+    var partner_id = box.read('partnerId');
+    try{
+
+      var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.DELETE_ATTACHMENT }?ticket_id=$ticket&pdfDoc=$pdfDoc&partner_id=$partner_id');
+      log('This is the Url to fetch the messages from the ticket helpdesk: $URL');
+      var response = await http.post(URL);
+
+      // Uncomment this line to log the response body
+      log(response.body);
+      
+      if (response.statusCode == 200){
+        // If the server returns an OK response, then print the whole response.
+        log('Attachment deleted successfully');
+        Get.snackbar('Success', "Attachment deleted successfully"); 
+        await GetTicketData(ticket);
+      } 
+    }catch (e){
+      log("This is the error : $e");
+    } finally{
+      isLoading.value = false;
     }
   }
 }

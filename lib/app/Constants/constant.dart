@@ -9,9 +9,9 @@ class Constant {
   static OdooClient? odooRpc;
   
   //-----------Live Url------//
-  static String BASE_URL = 'http://45.124.52.122:8069';
+  // static String BASE_URL = 'http://45.124.52.122:8069';
   // static String BASE_URL = 'https://iconofficesolutions.com.au/';
-  // static String BASE_URL = 'http://192.168.0.111:8017';
+  static String BASE_URL = 'http://192.168.0.110:8017';
   // static String BASE_URL = 'http://192.168.0.167:7099';
 
   static String odooUrl = BASE_URL;
@@ -33,6 +33,7 @@ class ApiEndPoints {
   static const String SEND_MESSAGE = '/app/api/helpdesk/send_message';
   static const String RECEIVE_MESSAGE = '/app/api/helpdesk/receive_message';
   static const String CREATE_HELPDESK_TICKET = '/api/app/helpdesk/ticket/create';
+  static const String DELETE_ATTACHMENT = '/app/api/helpdesk/delete_attachment';
 }
 
 void signOut({String? message}) async {

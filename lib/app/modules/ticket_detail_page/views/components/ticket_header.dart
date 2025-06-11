@@ -36,7 +36,7 @@ Container ticketHeaderBody(BuildContext context, ticket, TicketDetailPageControl
     final cont_portal = Get.find<TicketDetailPageController>();
     
     return Container(
-    width: MediaQuery.of(context).size.width * 0.9,
+    width: MediaQuery.of(context).size.width * 1,
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: AppColorList.ContainerBackground,

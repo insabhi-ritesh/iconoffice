@@ -16,6 +16,7 @@ import '../../../Constants/constant.dart';
 import '../../../common/app_color.dart';
 import '../../../common/fontSize.dart';
 import '../../../routes/app_pages.dart';
+import 'package:intl/intl.dart';
 // import '../../../routes/app_pages.dart';
 // import '../../../routes/app_pages.dart';
 
@@ -73,7 +74,7 @@ class PdfSignController extends GetxController {
   final Size signatureBoxSize = const Size(150, 60);
   final Size textBoxSize = const Size(150, 40);
   final Size dateBoxSize = const Size(150, 40);
-  final Size dateTimeBoxSize = const Size(180, 40);
+  final Size dateTimeBoxSize = const Size(240, 40);
 
 
   Future<void> placeFieldAtPercent(double percentX, double percentY) async {
@@ -116,11 +117,13 @@ class PdfSignController extends GetxController {
         break;
       case FieldType.dateTime:
         if (selectedDateTime.value != null) {
+          final formatted = DateFormat('yyyy-MM-dd HH:mm').format(selectedDateTime.value!);
           placedDateTimeFields.add(
             PlacedField(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
               position: Offset.zero,
-              value: selectedDateTime.value.toString(),
+              // value: selectedDateTime.value.toString(),
+              value: formatted,
               size: dateTimeBoxSize,
               type: FieldType.dateTime,
               percentX: percentX,
@@ -539,16 +542,12 @@ class PdfSignController extends GetxController {
           });
 
           final ticketController = Get.find<TicketDetailPageController>();
-          ticketController.GetTicketData(ticketNumber);
-          // Future.delayed(Duration(milliseconds: 100), (){
-          //   Get.find<TicketDetailPageController>().GetTicketData(ticketNumber);
-          // });
-          // Get.back();          
+          ticketController.GetTicketData(ticketNumber);         
         } catch (e) {
           // log('Failed to delete signed PDF: $e');
         }
         clearAllFields();
-        Get.snackbar('Success', 'Signed PDF uploaded successfully!');
+        Get.snackbar('Success', 'PDF uploaded successfully!');
         
         // Get.back();
       } else {
@@ -579,8 +578,8 @@ class PdfSignController extends GetxController {
         Get.snackbar("Error", "Failed to upload PDF: ${response.statusCode}");
         return false;
       }else {
-        // log('PDF uploaded successfully: $response.');
-        Get.snackbar("Success", "PDF uploaded successfully.");
+        log('PDF uploaded successfully: $response.');
+        // Get.snackbar("Success", "PDF uploaded successfully.");
         // Get.back();
       }
       return response.statusCode == 200;
