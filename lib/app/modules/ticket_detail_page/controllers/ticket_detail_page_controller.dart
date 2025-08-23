@@ -45,6 +45,8 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
   //   });
   // }
 
+  var assignedUsers = <AssignedUser>[].obs; // List for assigned users
+  var selectedUserId = Rxn<int>(); // Selected user ID for dropdown
 
   void addNewTimesheet() {
     autoValidate.value = false;
@@ -110,6 +112,86 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     debounce(userQuery, (_) => getUserName(userQuery.value), time: Duration(milliseconds: 500));
 
     GetTicketData(ticketNumber);
+    fetchAssignedUsers(); // Fetch users for dropdown
+  }
+
+  Future<void> fetchAssignedUsers() async {
+    try {
+      var partnerId = box.read('partnerId')?.toString() ?? '';
+      if (partnerId.isEmpty) {
+        log('Partner ID missing, skipping fetchAssignedUsers');
+        return;
+      }
+      var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.SEARCH_USER}');
+      log('Fetch assigned users: $URL');
+      var response = await http.get(URL);
+      log(response.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] && data['results'] != null) {
+          assignedUsers.clear();
+          for (var user in data['results']) {
+            assignedUsers.add(AssignedUser.fromJson(user));
+          }
+        } else {
+          Get.snackbar('Error', data['message'] ?? 'Failed to fetch assigned users');
+        }
+      } else if (response.statusCode == 401) {
+        Get.snackbar('Error', 'Session expired. Please log in again.');
+        Get.offAllNamed(Routes.LOGIN_PAGE);
+      } else {
+        Get.snackbar('Error', 'Failed to fetch assigned users: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to fetch assigned users: $e');
+    }
+  }
+
+Future<void> updateAssignedUser(String ticketNumber, int userId) async {
+    try {
+      var partnerId = box.read('partnerId')?.toString() ?? '';
+      if (partnerId.isEmpty) {
+        Get.snackbar('Error', 'Session expired. Please log in again.');
+        Get.offAllNamed(Routes.LOGIN_PAGE);
+        return;
+      }
+      var URL = Uri.parse('${Constant.BASE_URL}/app/api/update_ticket_assignee');
+      log('Update ticket assignee: $URL');
+      final response = await http.post(
+        URL,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'jsonrpc': '2.0',
+          'method': 'call',
+          'params': {
+            'ticket_no': ticketNumber,
+            'user_id': userId,
+            'partner_id': int.parse(partnerId),
+          },
+          'id': 1,
+        }),
+      );
+      log(response.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['result']?['success']) {
+          selectedUserId.value = userId;
+          await GetTicketData(ticketNumber);
+          Get.snackbar('Success', 'Ticket assigned successfully');
+        } else {
+          Get.snackbar('Error', data['result']?['message'] ?? data['error']?['message'] ?? 'Failed to assign ticket');
+        }
+      } else if (response.statusCode == 401) {
+        Get.snackbar('Error', 'Session expired. Please log in again.');
+        Get.offAllNamed(Routes.LOGIN_PAGE);
+      } else {
+        Get.snackbar('Error', 'Failed to assign ticket: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to assign ticket: $e');
+    }
   }
 
   Future<String?> downloadPdf(String url, String fileName, BuildContext context) async {
@@ -364,6 +446,7 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
           for (var element in res['data']) {
             var data = TicketDetail.fromJson(element);
             ticket_details.add(data);
+            selectedUserId.value = data.assi_to; // Initialize dropdown with current assignee
           }
           await GetMessagesFromTicket(ticket_details[0].ticket_id);
           // Uncomment this function to get the messages from the ticket frequently.
@@ -584,5 +667,19 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
     } finally{
       isLoading.value = false;
     }
+  }
+}
+
+class AssignedUser {
+  final int id;
+  final String name;
+
+  AssignedUser({required this.id, required this.name});
+
+  factory AssignedUser.fromJson(Map<String, dynamic> json) {
+    return AssignedUser(
+      id: json['id'] as int,
+      name: json['name'] as String,
+    );
   }
 }

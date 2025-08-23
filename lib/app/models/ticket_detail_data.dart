@@ -77,6 +77,8 @@ class TicketDetail {
       pdfDocuments: pdfDocsList, // <-- Added
     );
   }
+
+  int? get assi_to => null;
 }
 
 class SparePartDetail {

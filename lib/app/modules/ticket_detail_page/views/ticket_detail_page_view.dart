@@ -10,7 +10,6 @@ import 'components/ticket_header.dart';
 import 'components/ticket_info_box.dart';
 import 'ticket_details_loader/ticket_details_loader.dart';
 
-
 class TicketDetailPageView extends StatelessWidget {
   TicketDetailPageView({super.key});
 
@@ -48,7 +47,7 @@ class TicketDetailPageView extends StatelessWidget {
               icon: const Icon(Icons.arrow_back),
               onPressed: () {
                 Get.offAllNamed(Routes.HOME);
-                },
+              },
             ),
             title: Text('Service Ticket Detail', style: TextStyle(color: AppColorList.WhiteText)),
             backgroundColor: AppColorList.AppButtonColor,
@@ -60,7 +59,7 @@ class TicketDetailPageView extends StatelessWidget {
 
             return RefreshIndicator(
               onRefresh: () async {
-                await controller.refreshData(ticket.ticketNo1);           
+                await controller.refreshData(ticket.ticketNo1);
               },
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
@@ -87,6 +86,54 @@ class TicketDetailPageView extends StatelessWidget {
 
   Widget ticketHeader(BuildContext context, TicketDetailPageController controller, var ticket) {
     final currentStateIndex = getSelectedStateIndex(ticket.state1);
-    return ticketHeaderBody(context, ticket, controller, currentStateIndex);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ticketHeaderBody(context, ticket, controller, currentStateIndex),
+        const SizedBox(height: 16),
+        Obx(() => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DropdownButtonFormField<int>(
+                  decoration: InputDecoration(
+                    labelText: 'Assigned to',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  value: controller.selectedUserId.value,
+                  items: controller.assignedUsers.map((user) {
+                    return DropdownMenuItem<int>(
+                      value: user.id,
+                      child: Text(user.name),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    controller.selectedUserId.value = value; // Only update selectedUserId
+                  },
+                  isExpanded: true,
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: controller.selectedUserId.value != null
+                        ? () => controller.updateAssignedUser(ticket.ticketNo1, controller.selectedUserId.value!)
+                        : null, // Disable button if no user is selected
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColorList.AppButtonColor,
+                      foregroundColor: AppColorList.WhiteText,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    child: const Text('Assign'),
+                  ),
+                ),
+              ],
+            )),
+      ],
+    );
   }
 }
