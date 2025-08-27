@@ -40,24 +40,34 @@ class PdfSignView extends GetView<PdfSignController> {
                 )
               : const SizedBox.shrink()),
           Expanded(
-            child:
-            // Obx(() {
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return Obx(() => 
-                    GestureDetector(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Obx(() => GestureDetector(
                       onTapUp: controller.isPlacingField.value
                           ? (details) {
                               // Get the PDF widget's size and position
-                              final RenderBox box = pdfKey.currentContext?.findRenderObject() as RenderBox;
-                              final Offset localPosition = box.globalToLocal(details.globalPosition);
+                              final RenderBox? box =
+                                  pdfKey.currentContext?.findRenderObject()
+                                      as RenderBox?;
+                              if (box == null) return;
+                              final Offset localPosition =
+                                  box.globalToLocal(details.globalPosition);
                               final Size pdfSize = box.size;
-                    
-                              // Store as percentage
-                              final double percentX = localPosition.dx / pdfSize.width;
-                              final double percentY = localPosition.dy / pdfSize.height;
-                    
-                              controller.placeFieldAtPercent(percentX, percentY);
+                              final Offset scrollOffset = controller
+                                  .pdfViewerController.scrollOffset;
+
+                              // ✅ FIX: store top-left placement as percentage (no zoom)
+                              final double percentX =
+                                  (localPosition.dx + scrollOffset.dx) /
+                                      pdfSize.width;
+                              final double percentY =
+                                  (localPosition.dy + scrollOffset.dy) /
+                                      pdfSize.height;
+
+                              controller.placeFieldAtPercent(
+                                percentX.clamp(0.0, 1.0),
+                                percentY.clamp(0.0, 1.0),
+                              );
                             }
                           : null,
                       child: Stack(
@@ -68,24 +78,24 @@ class PdfSignView extends GetView<PdfSignController> {
                             controller: controller,
                           ),
                           ...buildPlacedFields(controller, pdfKey),
-                          if (controller.isPlacingField.value) InstructionOverlay(),
+                          if (controller.isPlacingField.value)
+                            InstructionOverlay(),
                         ],
                       ),
-                    ),
-                  );
-                },
-              ),
-            // }
-            // ),
+                    ));
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  List<Widget> buildPlacedFields(PdfSignController controller, GlobalKey pdfKey) {
+  List<Widget> buildPlacedFields(
+      PdfSignController controller, GlobalKey pdfKey) {
     const double baseFontSize = 14.0; // Base font size for text fields
-    final RenderBox? box = pdfKey.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? box =
+        pdfKey.currentContext?.findRenderObject() as RenderBox?;
     final Size pdfSize = box?.size ?? Size.zero;
 
     List<Widget> widgets = [];
@@ -156,20 +166,29 @@ class PdfSignView extends GetView<PdfSignController> {
     required Widget child,
   }) {
     // Calculate position and size based on PDF size and stored percentages
-    final double left = field.percentX * pdfSize.width;
-    final double top = field.percentY * pdfSize.height;
     final double width = field.percentWidth * pdfSize.width;
     final double height = field.percentHeight * pdfSize.height;
+
+    // ✅ FIX: use top-left placement consistently
+    final double left = field.percentX * pdfSize.width;
+    final double top = field.percentY * pdfSize.height;
 
     return Positioned(
       left: left,
       top: top,
       child: GestureDetector(
         onPanUpdate: (details) {
-          // Update percent position
-          final double newPercentX = ((left + details.delta.dx) / pdfSize.width).clamp(0.0, 1.0);
-          final double newPercentY = ((top + details.delta.dy) / pdfSize.height).clamp(0.0, 1.0);
-          controller.updateFieldPercentPosition(field, newPercentX, newPercentY);
+          // ✅ FIX: drag using top-left, no zoom scaling in math
+          final double newLeft = left + details.delta.dx;
+          final double newTop = top + details.delta.dy;
+
+          final double newPercentX =
+              (newLeft / pdfSize.width).clamp(0.0, 1.0);
+          final double newPercentY =
+              (newTop / pdfSize.height).clamp(0.0, 1.0);
+
+          controller.updateFieldPercentPosition(
+              field, newPercentX, newPercentY);
         },
         onLongPress: () {
           controller.removeField1(field, type);
@@ -179,7 +198,6 @@ class PdfSignView extends GetView<PdfSignController> {
             Container(
               width: width,
               height: height,
-              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: color,
                 border: Border.all(color: borderColor, width: 1.5),
@@ -196,11 +214,14 @@ class PdfSignView extends GetView<PdfSignController> {
                   const double minHeight = 24;
                   const double maxWidth = 400;
                   const double maxHeight = 200;
-                  final double newWidth = (width + details.delta.dx).clamp(minWidth, maxWidth);
-                  final double newHeight = (height + details.delta.dy).clamp(minHeight, maxHeight);
+                  final double newWidth =
+                      (width + details.delta.dx).clamp(minWidth, maxWidth);
+                  final double newHeight =
+                      (height + details.delta.dy).clamp(minHeight, maxHeight);
                   final double newPercentWidth = newWidth / pdfSize.width;
                   final double newPercentHeight = newHeight / pdfSize.height;
-                  controller.updateFieldPercentSize(field, newPercentWidth, newPercentHeight);
+                  controller.updateFieldPercentSize(
+                      field, newPercentWidth, newPercentHeight);
                 },
                 child: Container(
                   width: 20,
@@ -212,7 +233,8 @@ class PdfSignView extends GetView<PdfSignController> {
                       bottomRight: Radius.circular(4),
                     ),
                   ),
-                  child: Icon(Icons.open_in_full, size: 14, color: AppColorList.MainShadow),
+                  child: Icon(Icons.open_in_full,
+                      size: 14, color: AppColorList.MainShadow),
                 ),
               ),
             ),
@@ -222,6 +244,7 @@ class PdfSignView extends GetView<PdfSignController> {
     );
   }
 }
+
 class PdfWidget extends StatelessWidget {
   final String? pdfPath;
   final PdfSignController controller;
@@ -238,20 +261,23 @@ class PdfWidget extends StatelessWidget {
         onZoomLevelChanged: (details) {
           controller.zoomLevel.value = details.newZoomLevel;
         },
-        onPageChanged: (details) => controller.currentPage.value = details.newPageNumber,
+        onPageChanged: (details) =>
+            controller.currentPage.value = details.newPageNumber,
       );
-    }else {
+    } else {
       final file = File(pdfPath!);
       log('PDF Path: $pdfPath');
       log('File exists: ${file.existsSync()}');
       return file.existsSync()
           ? SfPdfViewer.file(
-            file, 
-            controller: controller.pdfViewerController,
-            onZoomLevelChanged: (details) {
-              controller.zoomLevel.value = details.newZoomLevel;
-            }
-          )
+              file,
+              controller: controller.pdfViewerController,
+              onZoomLevelChanged: (details) {
+                controller.zoomLevel.value = details.newZoomLevel;
+              },
+              onPageChanged: (details) =>
+                  controller.currentPage.value = details.newPageNumber,
+            )
           : Center(child: Text('PDF not found: $pdfPath'));
     }
   }

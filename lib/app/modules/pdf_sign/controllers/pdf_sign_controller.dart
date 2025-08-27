@@ -93,6 +93,7 @@ class PdfSignController extends GetxController {
             percentY: percentY,
             percentWidth: textBoxSize.width / 400, 
             percentHeight: textBoxSize.height / 600, 
+            pageIndex: currentPage.value - 1,
           ),
         );
         textController.clear();
@@ -110,6 +111,7 @@ class PdfSignController extends GetxController {
               percentY: percentY,
               percentWidth: dateBoxSize.width / 400,
               percentHeight: dateBoxSize.height / 600,
+              pageIndex: currentPage.value - 1,
             ),
           );
           selectedDate.value = '';
@@ -130,6 +132,7 @@ class PdfSignController extends GetxController {
               percentY: percentY,
               percentWidth: dateTimeBoxSize.width / 400,
               percentHeight: dateTimeBoxSize.height / 600,
+              pageIndex: currentPage.value - 1,
             ),
           );
           selectedDateTime.value = null;
@@ -149,6 +152,7 @@ class PdfSignController extends GetxController {
               percentY: percentY,
               percentWidth: signatureBoxSize.width / 400,
               percentHeight: signatureBoxSize.height / 600,
+              pageIndex: currentPage.value - 1,
             ),
           );
           signatureController.clear();
@@ -170,25 +174,41 @@ class PdfSignController extends GetxController {
       case FieldType.text:
         final index = placedTextFields.indexWhere((f) => f.id == field.id);
         if (index != -1) {
-          placedTextFields[index] = field.copyWith(percentX: percentX, percentY: percentY);
+          placedTextFields[index] = field.copyWith(
+            percentX: percentX, 
+            percentY: percentY,
+            pageIndex: currentPage.value - 1
+          );
         }
         break;
       case FieldType.date:
         final index = placedDateFields.indexWhere((f) => f.id == field.id);
         if (index != -1) {
-          placedDateFields[index] = field.copyWith(percentX: percentX, percentY: percentY);
+          placedDateFields[index] = field.copyWith(
+            percentX: percentX, 
+            percentY: percentY,
+            pageIndex: currentPage.value - 1
+          );
         }
         break;
       case FieldType.dateTime:
         final index = placedDateTimeFields.indexWhere((f) => f.id == field.id);
         if (index != -1) {
-          placedDateTimeFields[index] = field.copyWith(percentX: percentX, percentY: percentY);
+          placedDateTimeFields[index] = field.copyWith(
+            percentX: percentX, 
+            percentY: percentY,
+            pageIndex: currentPage.value - 1
+          );
         }
         break;
       case FieldType.signature:
         final index = placedSignatureFields.indexWhere((f) => f.id == field.id);
         if (index != -1) {
-          placedSignatureFields[index] = field.copyWith(percentX: percentX, percentY: percentY);
+          placedSignatureFields[index] = field.copyWith(
+            percentX: percentX, 
+            percentY: percentY,
+            pageIndex: currentPage.value - 1
+          );
         }
         break;
       default:
@@ -754,6 +774,7 @@ class PlacedField {
     double? percentY,
     double? percentWidth,
     double? percentHeight,
+    int? pageIndex,
   }) {
     return PlacedField(
       id: id ?? this.id,
@@ -765,6 +786,7 @@ class PlacedField {
       percentY: percentY ?? this.percentY,
       percentWidth: percentWidth ?? this.percentWidth,
       percentHeight: percentHeight ?? this.percentHeight,
+      pageIndex: pageIndex ?? this.pageIndex,
     );
   }
 }
