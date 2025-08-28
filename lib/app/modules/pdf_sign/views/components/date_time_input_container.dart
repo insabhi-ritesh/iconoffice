@@ -36,7 +36,7 @@ class DateTimeInputContainer extends StatelessWidget {
           pickedTime.hour,
           pickedTime.minute,
         );
-        log('Selected DateTime: ${controller.selectedDateTime.value}');
+        log('Selected DateTime: ${DateFormat('dd.MM.yy HH:mm').format(controller.selectedDateTime.value!)}');
         controller.dateTimeError.value = '';
       }
     }
@@ -55,6 +55,7 @@ class DateTimeInputContainer extends StatelessWidget {
           InkWell(
             onTap: () => _selectDateTime(context),
             child: Container(
+              constraints: const BoxConstraints(minWidth: 250), // Ensure enough width for dd.MM.yy HH:mm
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               decoration: BoxDecoration(
                 border: Border.all(
@@ -62,16 +63,18 @@ class DateTimeInputContainer extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Obx(()
-                => Row(
+              child: Obx(() =>
+                Row(
                   children: [
                     Expanded(
                       child: Text(
                         controller.selectedDateTime.value != null
-                            ? DateFormat('yyyy-MM-dd HH:mm').format(controller.selectedDateTime.value!)
+                            ? DateFormat('dd.MM.yy HH:mm').format(controller.selectedDateTime.value!)
                             : 'Select date and time',
                         style: TextStyle(
                           color: controller.selectedDateTime.value != null ? AppColorList.AppText : AppColorList.MainShadow,
+                          overflow: TextOverflow.visible,
+                          fontSize: AppFontSize.size5,
                         ),
                       ),
                     ),

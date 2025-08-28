@@ -146,8 +146,8 @@ Widget buildTimesheetForm(
                             ),
                             child: Text(
                               controller.selectedDate.value != null
-                                  ? DateFormat('yyyy-MM-dd').format(controller.selectedDate.value!)
-                                  : DateFormat('yyyy-MM-dd').format(timesheet.date),
+                                  ? DateFormat('dd MMMM yyyy').format(controller.selectedDate.value!)
+                                  : DateFormat('dd MMMM yyyy').format(timesheet.date),
                               style: const TextStyle(fontWeight: AppFontWeight.font6),
                               textAlign: TextAlign.center,
                             ),

@@ -18,7 +18,7 @@ class DateInputContainer extends StatelessWidget {
       lastDate: DateTime(2100),
     );
     if (picked != null) {
-      final formattedDate = DateFormat('yyyy-MM-dd').format(picked);
+      final formattedDate = DateFormat('dd.MM.yyyy').format(picked);
       controller.selectedDate.value = formattedDate;
       controller.dateError.value = '';
     }
@@ -37,6 +37,7 @@ class DateInputContainer extends StatelessWidget {
           InkWell(
             onTap: () => _selectDate(context),
             child: Container(
+              constraints: const BoxConstraints(minWidth: 200), // Ensure enough width for full date
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               decoration: BoxDecoration(
                 border: Border.all(
@@ -54,6 +55,8 @@ class DateInputContainer extends StatelessWidget {
                             : 'Select a date',
                         style: TextStyle(
                           color: controller.selectedDate.value.isNotEmpty ? Colors.black : Colors.grey,
+                          overflow: TextOverflow.visible,
+                          fontSize: AppFontSize.size5, // Ensure consistent font size for full date display
                         ),
                       ),
                     ),

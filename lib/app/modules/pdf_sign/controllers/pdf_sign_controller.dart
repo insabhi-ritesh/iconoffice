@@ -40,8 +40,7 @@ class PdfSignController extends GetxController {
   final RxDouble zoomLevel1 = 1.0.obs;
   final RxDouble zoomLevel2 = 1.0.obs;
 
-
-    final Rx<FieldType> selectedFieldType = Rx<FieldType>(FieldType.none);
+  final Rx<FieldType> selectedFieldType = Rx<FieldType>(FieldType.none);
   final RxBool isPlacingField = false.obs;
   final RxBool isEditingField = false.obs;
 
@@ -63,19 +62,15 @@ class PdfSignController extends GetxController {
   final RxString signatureError = ''.obs;
   final Rx<Uint8List?> signatureImage = Rx<Uint8List?>(null);
 
-
-
   final RxList<PlacedField> placedTextFields = <PlacedField>[].obs;
   final RxList<PlacedField> placedDateFields = <PlacedField>[].obs;
   final RxList<PlacedField> placedDateTimeFields = <PlacedField>[].obs;
   final RxList<PlacedField> placedSignatureFields = <PlacedField>[].obs;
 
-
   final Size signatureBoxSize = const Size(150, 60);
   final Size textBoxSize = const Size(150, 40);
   final Size dateBoxSize = const Size(150, 40);
   final Size dateTimeBoxSize = const Size(240, 40);
-
 
   Future<void> placeFieldAtPercent(double percentX, double percentY) async {
     if (!isPlacingField.value) return;
@@ -119,12 +114,11 @@ class PdfSignController extends GetxController {
         break;
       case FieldType.dateTime:
         if (selectedDateTime.value != null) {
-          final formatted = DateFormat('yyyy-MM-dd HH:mm').format(selectedDateTime.value!);
+          final formatted = DateFormat('dd.MM.yyyy HH:mm').format(selectedDateTime.value!);
           placedDateTimeFields.add(
             PlacedField(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
               position: Offset.zero,
-              // value: selectedDateTime.value.toString(),
               value: formatted,
               size: dateTimeBoxSize,
               type: FieldType.dateTime,
@@ -457,6 +451,7 @@ class PdfSignController extends GetxController {
       required double percentY,
       required double percentWidth,
       required double percentHeight,
+      required FieldType type, // Added to differentiate field types
     }) {
       final page  = document.pages[pageIndex];
       final x     = percentX     * pageSize.width;
@@ -464,8 +459,10 @@ class PdfSignController extends GetxController {
       final boxW  = percentWidth * pageSize.width;
       final boxH  = percentHeight* pageSize.height;
 
-      // font size ≈ 80 % of the rectangle height; clamp to sane bounds
-      final fontSize = (boxH * .80).clamp(6, 48).toDouble();
+      // Adjust font size based on field type to prevent truncation
+      final fontSize = type == FieldType.date 
+          ? (boxW / 1).clamp(24, 28).toDouble() // Adjusted for date to ensure full year display
+          : (boxH * 0.80).clamp(6, 48).toDouble();
       final font     = PdfStandardFont(PdfFontFamily.helvetica, fontSize);
 
       page.graphics.drawString(
@@ -474,9 +471,6 @@ class PdfSignController extends GetxController {
         bounds: Rect.fromLTWH(x, y, boxW, boxH),
       );
     }
-
-
-    // final font = PdfStandardFont(PdfFontFamily.helvetica, 12);
 
     // Draw Text fields
     for (final field in placedTextFields) {
@@ -487,9 +481,9 @@ class PdfSignController extends GetxController {
         percentY     : field.percentY,
         percentWidth : field.percentWidth,
         percentHeight: field.percentHeight,
+        type         : FieldType.text,
       );
     }
-
 
     // Draw Date fields
     for (var field in placedDateFields) {
@@ -500,6 +494,7 @@ class PdfSignController extends GetxController {
         percentY     : field.percentY,
         percentWidth : field.percentWidth,
         percentHeight: field.percentHeight,
+        type         : FieldType.date,
       );
     }
 
@@ -512,6 +507,7 @@ class PdfSignController extends GetxController {
         percentY     : field.percentY,
         percentWidth : field.percentWidth,
         percentHeight: field.percentHeight,
+        type         : FieldType.dateTime,
       );
     }
 
@@ -529,35 +525,22 @@ class PdfSignController extends GetxController {
     showPopUp1();
 
     try {
-
-    // Save to new file
+      // Save to new file
       final List<int> modifiedBytes = await document.save();
       document.dispose();
 
-      // final Directory parentDir = file.parent;
-      // final String randomSuffix = getRandomString(2);
       final String baseName = '${file.uri.pathSegments.last}';
       log(baseName.toString());
-      // final String outputPath = await getUniquePdfFilePath(parentDir, baseName);
       final outputPath = '${file.parent.path}/${file.uri.pathSegments.last}';
       final File output = File(outputPath);
       await output.writeAsBytes(modifiedBytes);
       pdfPath.value = output.path;
 
-      // await OpenFilex.open(outputPath);
-
-
       final bool uploadSuccess = await uploadSignedPdf(output.path);
 
       if (uploadSuccess) {
         try {
-          // Get.back(); // Close the upload dialog
-          // if (await output.exists()) {
-          //   await output.delete();
-          // }
-          // showPopUp2();
-          // Get.offNamed(Routes.TICKET_DETAIL_PAGE, arguments: ticketNumber);
-          Get.until((route){
+          Get.until((route) {
             return route.settings.name == Routes.TICKET_DETAIL_PAGE;
           });
 
@@ -568,16 +551,15 @@ class PdfSignController extends GetxController {
         }
         clearAllFields();
         Get.snackbar('Success', 'PDF uploaded successfully!');
-        
-        // Get.back();
       } else {
         Get.snackbar('Upload Failed', 'Upload failed. PDF saved locally.');
       }
-    } catch(e){
+    } catch(e) {
       // log("Error saving PDF: $e");
       Get.snackbar('Error', 'Failed to save PDF. Please try again.');
     }
   }
+
   Future<bool> uploadSignedPdf(String filePath) async {
     final partnerId = box.read('partnerId');
     try {
@@ -597,10 +579,8 @@ class PdfSignController extends GetxController {
         // log('Failed to upload PDF: ${response.statusCode}');
         Get.snackbar("Error", "Failed to upload PDF: ${response.statusCode}");
         return false;
-      }else {
+      } else {
         log('PDF uploaded successfully: $response.');
-        // Get.snackbar("Success", "PDF uploaded successfully.");
-        // Get.back();
       }
       return response.statusCode == 200;
     } catch (e) {
@@ -609,12 +589,6 @@ class PdfSignController extends GetxController {
       return false;
     }
   }
-
-  // String getRandomString(int length) {
-  //   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  //   final rand = Random();
-  //   return List.generate(length, (index) => chars[rand.nextInt(chars.length)]).join();
-  // }
 
   @override
   void onClose() {
@@ -634,7 +608,7 @@ class PdfSignController extends GetxController {
     listenToZoom();  // <<--- Start listening to zoom changes
   }
 
-  //Listen to zoom changes (call this in your view's initState)
+  // Listen to zoom changes (call this in your view's initState)
   void listenToZoom() {
     pdfViewerController.addListener(() {
       zoomLevel.value = pdfViewerController.zoomLevel;
@@ -656,11 +630,8 @@ class PdfSignController extends GetxController {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: AppFontSize.size3,
               fontWeight: AppFontWeight.font3),
-              
             ),
-
             const SizedBox(height: 20),
-
             // Loader at the bottom
             LoadingAnimationWidget.fourRotatingDots(
               color: AppColorList.AppColor, size: AppFontSize.sizeLarge
@@ -689,11 +660,8 @@ class PdfSignController extends GetxController {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: AppFontSize.size3,
               fontWeight: AppFontWeight.font3),
-              
             ),
-
             const SizedBox(height: 20),
-
             // Loader at the bottom
             LoadingAnimationWidget.fourRotatingDots(
               color: AppColorList.AppColor, size: AppFontSize.sizeLarge
@@ -706,9 +674,7 @@ class PdfSignController extends GetxController {
     Future.delayed(const Duration(seconds: 2), () {
       // Get.back(); // Close the dialog after 2 seconds
     });
-
   }
-
 
   void clearAllFields() {
     placedTextFields.clear();
