@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:insabhi_icon_office/app/modules/home/controllers/home_controller.dart';
 import '../../../common/app_color.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/ticket_detail_page_controller.dart';
@@ -41,44 +44,61 @@ class TicketDetailPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<TicketDetailPageController>(
       builder: (controller) {
-        return Scaffold(
-          appBar: AppBar(
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                Get.offAllNamed(Routes.HOME);
-              },
-            ),
-            title: Text('Service Ticket Detail', style: TextStyle(color: AppColorList.WhiteText)),
-            backgroundColor: AppColorList.AppButtonColor,
-            iconTheme: IconThemeData(color: AppColorList.WhiteText),
-          ),
-          body: Obx(() {
-            if (controller.ticket_details.isEmpty) return TicketDetailSkeleton();
-            final ticket = controller.ticket_details[0];
-
-            return RefreshIndicator(
-              onRefresh: () async {
-                await controller.refreshData(ticket.ticketNo1);
-              },
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ticketHeader(context, controller, ticket),
-                    const SizedBox(height: 16),
-                    ticketInfoBox(ticket, context),
-                    const SizedBox(height: 24),
-                    const Divider(),
-                    ticketSections(ticket, controller, context),
-                    const SizedBox(height: 24),
-                  ],
-                ),
+        return WillPopScope(
+          onWillPop: () async {
+            try {
+              Get.find<HomeController>().fetchTickets(isRefresh: true);
+              Get.offAllNamed(Routes.HOME);
+              return false;
+            } catch (e) {
+              log('Error refreshing ticket list on back: $e');
+              return true;
+            }
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  try {
+                    Get.find<HomeController>().fetchTickets(isRefresh: true);
+                  } catch (e) {
+                    log('Error refreshing ticket list on back: $e');
+                  }
+                  Get.offAllNamed(Routes.HOME);
+                },
               ),
-            );
-          }),
-          floatingActionButton: tickerFloatActionButton(controller.ticketNumber),
+              title: Text('Service Ticket Detail', style: TextStyle(color: AppColorList.WhiteText)),
+              backgroundColor: AppColorList.AppButtonColor,
+              iconTheme: IconThemeData(color: AppColorList.WhiteText),
+            ),
+            body: Obx(() {
+              if (controller.ticket_details.isEmpty) return TicketDetailSkeleton();
+              final ticket = controller.ticket_details[0];
+
+              return RefreshIndicator(
+                onRefresh: () async {
+                  await controller.refreshData(ticket.ticketNo1);
+                },
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ticketHeader(context, controller, ticket),
+                      const SizedBox(height: 16),
+                      ticketInfoBox(ticket, context),
+                      const SizedBox(height: 24),
+                      const Divider(),
+                      ticketSections(ticket, controller, context),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              );
+            }),
+            floatingActionButton: tickerFloatActionButton(controller.ticketNumber),
+          ),
         );
       },
     );

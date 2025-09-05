@@ -12,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:insabhi_icon_office/app/models/messages_model.dart';
 import 'package:insabhi_icon_office/app/models/ticket_detail_data.dart';
+import 'package:insabhi_icon_office/app/modules/home/controllers/home_controller.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../Constants/constant.dart';
@@ -148,51 +149,57 @@ class TicketDetailPageController extends GetxController with GetTickerProviderSt
   }
 
 Future<void> updateAssignedUser(String ticketNumber, int userId) async {
-    try {
-      var partnerId = box.read('partnerId')?.toString() ?? '';
-      if (partnerId.isEmpty) {
-        Get.snackbar('Error', 'Session expired. Please log in again.');
-        Get.offAllNamed(Routes.LOGIN_PAGE);
-        return;
-      }
-      var URL = Uri.parse('${Constant.BASE_URL}/app/api/update_ticket_assignee');
-      log('Update ticket assignee: $URL');
-      final response = await http.post(
-        URL,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'jsonrpc': '2.0',
-          'method': 'call',
-          'params': {
-            'ticket_no': ticketNumber,
-            'user_id': userId,
-            'partner_id': int.parse(partnerId),
-          },
-          'id': 1,
-        }),
-      );
-      log(response.body);
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['result']?['success']) {
-          selectedUserId.value = userId;
-          await GetTicketData(ticketNumber);
-          Get.snackbar('Success', 'Ticket assigned successfully');
-        } else {
-          Get.snackbar('Error', data['result']?['message'] ?? data['error']?['message'] ?? 'Failed to assign ticket');
-        }
-      } else if (response.statusCode == 401) {
-        Get.snackbar('Error', 'Session expired. Please log in again.');
-        Get.offAllNamed(Routes.LOGIN_PAGE);
-      } else {
-        Get.snackbar('Error', 'Failed to assign ticket: HTTP ${response.statusCode}');
-      }
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to assign ticket: $e');
+  try {
+    var partnerId = box.read('partnerId')?.toString() ?? '';
+    if (partnerId.isEmpty) {
+      Get.snackbar('Error', 'Session expired. Please log in again.');
+      Get.offAllNamed(Routes.LOGIN_PAGE);
+      return;
     }
+    var URL = Uri.parse('${Constant.BASE_URL}/app/api/update_ticket_assignee');
+    log('Update ticket assignee: $URL');
+    final response = await http.post(
+      URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'jsonrpc': '2.0',
+        'method': 'call',
+        'params': {
+          'ticket_no': ticketNumber,
+          'user_id': userId,
+          'partner_id': int.parse(partnerId),
+        },
+        'id': 1,
+      }),
+    );
+    log(response.body);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['result']?['success']) {
+        selectedUserId.value = userId;
+        await GetTicketData(ticketNumber);
+        Get.snackbar('Success', 'Ticket assigned successfully');
+        // Notify ticket list to refresh
+        try {
+          Get.find<HomeController>().fetchTickets(isRefresh: true);
+        } catch (e) {
+          log('Error notifying ticket list: $e');
+        }
+      } else {
+        Get.snackbar('Error', data['result']?['message'] ?? data['error']?['message'] ?? 'Failed to assign ticket');
+      }
+    } else if (response.statusCode == 401) {
+      Get.snackbar('Error', 'Session expired. Please log in again.');
+      Get.offAllNamed(Routes.LOGIN_PAGE);
+    } else {
+      Get.snackbar('Error', 'Failed to assign ticket: HTTP ${response.statusCode}');
+    }
+  } catch (e) {
+    Get.snackbar('Error', 'Failed to assign ticket: $e');
   }
+}
 
   Future<String?> downloadPdf(String url, String fileName, BuildContext context) async {
     try {
@@ -224,32 +231,44 @@ Future<void> updateAssignedUser(String ticketNumber, int userId) async {
   }
 
   Future<void> updateTicketState(String ticket_number, String newState) async {
-    try {
-      var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.UPDATE_STATE}?ticket_no=$ticket_number&new_state=$newState');
-      log('Update the ticket state: $URL');
-      final response = await http.post(URL);
-      log(response.body);
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success']) {
-          selectedState.value = newState;
-          if (newState == 'closed'){
-            Get.offAllNamed(Routes.HOME);
-          } else {
-            await GetTicketData(ticket_number);
+  try {
+    var URL = Uri.parse('${Constant.BASE_URL}${ApiEndPoints.UPDATE_STATE}?ticket_no=$ticket_number&new_state=$newState');
+    log('Update the ticket state: $URL');
+    final response = await http.post(URL);
+    log(response.body);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        selectedState.value = newState;
+        if (newState == 'closed') {
+          Get.offAllNamed(Routes.HOME);
+          // Notify ticket list to refresh
+          try {
+            Get.find<HomeController>().fetchTickets(isRefresh: true);
+          } catch (e) {
+            log('Error notifying ticket list: $e');
           }
         } else {
-          showPopUp();
-          Get.snackbar('Error', data['message'] ?? 'Something went wrong');
+          await GetTicketData(ticket_number);
+          // Notify ticket list to refresh
+          try {
+            Get.find<HomeController>().fetchTickets(isRefresh: true);
+          } catch (e) {
+            log('Error notifying ticket list: $e');
+          }
         }
+        Get.snackbar('Success', 'Ticket state updated successfully');
       } else {
-        Get.snackbar('Error', 'Failed to update ticket state');
+        showPopUp();
+        Get.snackbar('Error', data['message'] ?? 'Something went wrong');
       }
-    }
-    catch (e){
+    } else {
       Get.snackbar('Error', 'Failed to update ticket state');
     }
+  } catch (e) {
+    Get.snackbar('Error', 'Failed to update ticket state');
   }
+}
   Future<void> submitTimesheets(String ticketId, DateTime? date, String State) async {
     var ticket_id = ticketId;
     var productId = productName.text;
