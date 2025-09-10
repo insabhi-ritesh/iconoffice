@@ -21,6 +21,13 @@ Widget buildTimesheetForm(
     controller.formKey = GlobalKey<FormState>();
   }
 
+  // ✅ Ensure dropdown clears when field loses focus
+  controller.productFocusNode.addListener(() {
+    if (!controller.productFocusNode.hasFocus) {
+      controller.product_list.clear();
+    }
+  });
+
   return Obx(() {
     return Form(
       key: controller.formKey,
@@ -37,6 +44,7 @@ Widget buildTimesheetForm(
                 child: Column(
                   children: [
                     TextFormField(
+                      focusNode: controller.productFocusNode,
                       onChanged: (value) => controller.searchQuery.value = value,
                       controller: controller.productName,
                       decoration: const InputDecoration(labelText: 'Search Product'),
@@ -46,8 +54,14 @@ Widget buildTimesheetForm(
                         }
                         return null;
                       },
+                      onTap: () {
+                        if (controller.searchQuery.value.isEmpty) {
+                          controller.getProductData('');
+                        }
+                      },
                     ),
-                    SizedBox(height: 8),
+
+                    const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
                         border: Border.all(
@@ -58,6 +72,7 @@ Widget buildTimesheetForm(
                       ),
                       child: buildProductSearchResults(controller),
                     ),
+
                     TextFormField(
                       decoration: const InputDecoration(labelText: "Description"),
                       controller: controller.productName,
@@ -68,6 +83,7 @@ Widget buildTimesheetForm(
                         return null;
                       },
                     ),
+
                     TextFormField(
                       decoration: const InputDecoration(labelText: "Hours"),
                       controller: controller.hours,
@@ -86,6 +102,7 @@ Widget buildTimesheetForm(
                         FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                       ],
                     ),
+
                     TextFormField(
                       decoration: const InputDecoration(labelText: "Resolution"),
                       controller: controller.resolution,
@@ -96,8 +113,13 @@ Widget buildTimesheetForm(
                         return null;
                       },
                     ),
+
+                    /// 🔹 User field (admin editable, normal user read-only)
                     TextFormField(
-                      onChanged: (value) => controller.userQuery.value = value,
+                      readOnly: !controller.isAdmin.value,
+                      onChanged: controller.isAdmin.value
+                          ? (value) => controller.userQuery.value = value
+                          : null,
                       decoration: const InputDecoration(labelText: "User"),
                       controller: controller.resUser,
                       validator: (value) {
@@ -107,18 +129,24 @@ Widget buildTimesheetForm(
                         return null;
                       },
                     ),
-                    SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: AppColorList.AppText,
-                          width: 1.0,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: buildUserSearchResults(controller),
-                    ),
+                    const SizedBox(height: 8),
+
+                    /// 🔹 Show dropdown only for admin
+                    controller.isAdmin.value
+                        ? Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: AppColorList.AppText,
+                                width: 1.0,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: buildUserSearchResults(controller),
+                          )
+                        : const SizedBox.shrink(),
+
                     IsEnabledButton(controller),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -155,18 +183,25 @@ Widget buildTimesheetForm(
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => controller.removeTimesheet(),
-                        )
+                          onPressed: () {
+                            controller.removeTimesheet();
+                            controller.product_list.clear(); // ✅ Clear dropdown on row removal
+                          },
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
             );
           }).toList(),
+
           controller.form.value == false
               ? ElevatedButton(
-                  onPressed: controller.addNewTimesheet,
+                  onPressed: () {
+                    controller.addNewTimesheet();
+                    controller.product_list.clear(); // ✅ Clear dropdown when adding new row
+                  },
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(MediaQuery.of(context).size.width * 0.9, 40),
                   ),
@@ -179,11 +214,12 @@ Widget buildTimesheetForm(
                     ),
                   ),
                 )
-              : SizedBox.shrink(),
+              : const SizedBox.shrink(),
+
           const SizedBox(height: 8),
+
           ElevatedButton(
             onPressed: () {
-              // Set autoValidate to true to show errors immediately
               controller.autoValidate.value = true;
               if (controller.formKey!.currentState!.validate()) {
                 controller.submitTimesheets(
@@ -197,7 +233,7 @@ Widget buildTimesheetForm(
               minimumSize: Size(MediaQuery.of(context).size.width * 0.9, 40),
             ),
             child: const Text(
-              "Submit All Timesheets",
+              "Submit",
               style: TextStyle(
                 fontSize: AppFontSize.size4,
                 fontWeight: AppFontWeight.font3,
