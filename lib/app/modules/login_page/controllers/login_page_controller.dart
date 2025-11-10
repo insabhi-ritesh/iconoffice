@@ -19,6 +19,7 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
   late Animation<double> animation;
   var rememberMe = false.obs;
   var Switch_page = false.obs;
+  var isPasswordVisible = false.obs;
 
   @override
   void onInit() {

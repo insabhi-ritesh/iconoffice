@@ -111,9 +111,9 @@ Center loginForm(dynamic controller) {
                 ),
               ),
               const SizedBox(height: 6),
-              TextField(
+              Obx(() => TextField(
                 controller: controller.Password,
-                obscureText: true,
+                obscureText: !controller.isPasswordVisible.value,
                 decoration: InputDecoration(
                   labelText: 'Enter your password',
                   labelStyle: TextStyle(
@@ -124,10 +124,21 @@ Center loginForm(dynamic controller) {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      controller.isPasswordVisible.value
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: AppColorList.AppText,
+                    ),
+                    onPressed: () {
+                      controller.isPasswordVisible.value = !controller.isPasswordVisible.value;
+                    },
+                  ),
                   // filled: true,
                   // fillColor: AppColorList.AppTextField,
                 ),
-              ),
+              )),
               const SizedBox(height: 10,),
               RememberMeCheckbox(controller: controller,),
               // Padding(
