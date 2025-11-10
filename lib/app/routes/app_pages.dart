@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 
+import '../modules/feedback/bindings/feedback_binding.dart';
+import '../modules/feedback/views/feedback_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/index/bindings/index_binding.dart';
@@ -92,6 +94,11 @@ class AppPages {
       name: _Paths.PORTAL_TICKET_FORM,
       page: () => PortalTicketFormView(),
       binding: PortalTicketFormBinding(),
+    ),
+    GetPage(
+      name: _Paths.FEEDBACK,
+      page: () => const FeedbackView(),
+      binding: FeedbackBinding(),
     ),
   ];
 }

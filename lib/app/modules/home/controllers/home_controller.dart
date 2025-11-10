@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
@@ -14,7 +13,9 @@ import '../../../routes/app_pages.dart';
 class HomeController extends GetxController {
   final box = GetStorage();
   var tickets = <Ticket>[].obs;
-  ScrollController   scrollController = ScrollController();
+  ScrollController scrollController = ScrollController();
+  var originalTickets = <Ticket>[]; // Backup of all tickets
+  var currentFilter = 'All'.obs; // Track the current filter
 
   // Pagination state
   int currentPage = 1;
@@ -33,18 +34,23 @@ class HomeController extends GetxController {
   }
 
   Future<void> fetchTickets({bool isRefresh = false}) async {
-    
     isLoading.value = true;
     if (isRefresh) {
       currentPage = 1;
       isLastPage.value = false;
       tickets.clear();
-    } 
+      if (currentFilter.value == 'All') {
+        originalTickets.clear();
+      }
+    }
 
     var partnerId = box.read('partnerId');
     try {
+      final statusParam = currentFilter.value != 'All'
+          ? statusMap[currentFilter.value] ?? ''
+          : '';
       final url = Uri.parse(
-        '${Constant.BASE_URL}${ApiEndPoints.GET_TICKET_DATA}?partner_id=$partnerId&page=$currentPage&limit=$pageSize',
+        '${Constant.BASE_URL}${ApiEndPoints.GET_TICKET_DATA}?partner_id=$partnerId&page=$currentPage&limit=$pageSize${statusParam.isNotEmpty ? "&status=$statusParam" : ""}',
       );
       log("Ticket Data collecting url: $url");
       var response = await http.get(url);
@@ -61,12 +67,19 @@ class HomeController extends GetxController {
           if (newTickets.length < pageSize) {
             isLastPage.value = true;
           }
-          tickets.addAll(newTickets);
+          if (isRefresh) {
+            tickets.value = newTickets;
+            if (currentFilter.value == 'All') {
+              originalTickets.addAll(newTickets);
+            }
+          } else {
+            tickets.addAll(newTickets);
+          }
           currentPage++;
         } else {
           isLastPage.value = true;
           if (isRefresh) {
-            Get.snackbar("Error", "No tickets found");
+            Get.snackbar("Error", "No tickets found for ${currentFilter.value}");
           }
         }
       } else {
@@ -80,8 +93,41 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> refreshData() async {
+  void searchTickets(String query) {
+    if (query.isEmpty) {
+      filterTicketsByStatus(currentFilter.value);
+      return;
+    }
+    final filteredTickets = originalTickets.where((ticket) {
+      final ticketNoLower = ticket.ticketNo.toLowerCase();
+      final customerNameLower = ticket.tpartnerName.toLowerCase();
+      final queryLower = query.toLowerCase();
 
+      final matchesTicketNo = ticketNoLower.contains(queryLower);
+      final matchesCustomerName = customerNameLower.contains(queryLower);
+
+      final matchesQuery = matchesTicketNo || matchesCustomerName;
+      final matchesStatus = currentFilter.value == 'All' || ticket.state == statusMap[currentFilter.value];
+      return matchesQuery && matchesStatus;
+    }).toList();
+    tickets.assignAll(filteredTickets);
+  }
+
+  final statusMap = {
+    'New': 'new',
+    'Assigned': 'assigned',
+    'Work in Progress': 'work_in',
+  };
+
+  void filterTicketsByStatus(String label) {
+    currentFilter.value = label;
+    tickets.clear();
+    isLastPage.value = false;
+    currentPage = 1;
+    fetchTickets(isRefresh: true);
+  }
+
+  Future<void> refreshData() async {
     fetchTickets(isRefresh: true,);
   }
 

@@ -1,9 +1,9 @@
 import 'dart:developer';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:insabhi_icon_office/app/modules/home/controllers/home_controller.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import '../../../common/app_color.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/ticket_detail_page_controller.dart';
@@ -56,6 +56,7 @@ class TicketDetailPageView extends StatelessWidget {
             }
           },
           child: Scaffold(
+            resizeToAvoidBottomInset: true,
             appBar: AppBar(
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -80,20 +81,33 @@ class TicketDetailPageView extends StatelessWidget {
                 onRefresh: () async {
                   await controller.refreshData(ticket.ticketNo1);
                 },
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ticketHeader(context, controller, ticket),
-                      const SizedBox(height: 16),
-                      ticketInfoBox(ticket, context),
-                      const SizedBox(height: 24),
-                      const Divider(),
-                      ticketSections(ticket, controller, context),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      reverse: true,
+                      padding: const EdgeInsets.all(16.0),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: IntrinsicHeight(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ticketHeader(context, controller, ticket),
+                              const SizedBox(height: 16),
+                              ticketInfoBox(ticket, context),
+                              const SizedBox(height: 24),
+                              const Divider(),
+                              ticketSections(ticket, controller, context),
+                              const SizedBox(height: 24),
+                              const SizedBox(height: 60),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               );
             }),
@@ -106,6 +120,8 @@ class TicketDetailPageView extends StatelessWidget {
 
   Widget ticketHeader(BuildContext context, TicketDetailPageController controller, var ticket) {
     final currentStateIndex = getSelectedStateIndex(ticket.state1);
+    final TextEditingController searchController = TextEditingController();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -114,32 +130,73 @@ class TicketDetailPageView extends StatelessWidget {
         Obx(() => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DropdownButtonFormField<int>(
-                  decoration: InputDecoration(
-                    labelText: 'Assigned to',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade400),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  value: controller.selectedUserId.value,
-                  items: controller.assignedUsers.map((user) {
-                    return DropdownMenuItem<int>(
-                      value: user.id,
-                      child: Text(user.name),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    controller.selectedUserId.value = value; // Only update selectedUserId
-                  },
-                  isExpanded: true,
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton2<int>(
+                      isExpanded: true,
+                      value: controller.selectedUserId.value,
+                      dropdownStyleData: DropdownStyleData(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                        ),
+                        offset: const Offset(0, 8),
+                        maxHeight: 300, // Fixed dropdown height
+                      ),
+                      dropdownSearchData: DropdownSearchData(
+                        searchController: searchController,
+                        searchInnerWidgetHeight: 50,
+                        searchInnerWidget: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextField(
+                            controller: searchController,
+                            onChanged: (value) {
+                              controller.userQuery.value = value;
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Search user...',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: Colors.grey),
+                              ),
+                            ),
+                          ),
+                        ),
+                        searchMatchFn: (item, searchValue) {
+                          final name = (item.value != null)
+                              ? controller.assignedUsers
+                                  .firstWhereOrNull((u) => u.id == item.value)
+                                  ?.name
+                                  ?.toLowerCase()
+                              : '';
+                          return name?.contains(searchValue.toLowerCase()) ?? false;
+                        },
+                      ),
+                      hint: const Text('Search user'),
+                      items: controller.assignedUsers.map((user) {
+                        return DropdownMenuItem<int>(
+                          value: user.id,
+                          child: Text(user.name),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        controller.selectedUserId.value = value;
+                        searchController.clear();
+                      },
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Center(
                   child: ElevatedButton(
                     onPressed: controller.selectedUserId.value != null
                         ? () => controller.updateAssignedUser(ticket.ticketNo1, controller.selectedUserId.value!)
-                        : null, // Disable button if no user is selected
+                        : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColorList.AppButtonColor,
                       foregroundColor: AppColorList.WhiteText,

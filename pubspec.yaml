@@ -56,8 +56,10 @@ dependencies:
   file_picker: ^10.1.8
   emoji_picker_flutter: ^4.3.0
   intl: ^0.20.2
+  image: ^4.5.4
   # open_filex: ^4.7.0
   # flutter_local_notifications: ^19.1.0
+  dropdown_button2: ^2.3.9
 
 dev_dependencies:
   flutter_test:

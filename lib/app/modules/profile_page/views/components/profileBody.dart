@@ -66,6 +66,12 @@ SafeArea profileBody(Uint8List? imageBytes, ResUser resUser, ProfilePageControll
                         value: "********",
                         onTap: () => Get.toNamed(Routes.UPDATE_PASSWORD),
                       ),
+                      ProfileField(
+                        icon: Icons.feedback_outlined,
+                        label: "Feedback",
+                        value: "Provide your feedback",
+                        onTap: () => Get.toNamed(Routes.FEEDBACK),
+                      ),
                     ],
                     const SizedBox(height: 30),
                     ElevatedButton(

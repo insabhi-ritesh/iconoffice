@@ -15,6 +15,7 @@ abstract class Routes {
   static const PDF_SIGN = _Paths.PDF_SIGN;
   static const PORTAL_VIEW = _Paths.PORTAL_VIEW;
   static const PORTAL_TICKET_FORM = _Paths.PORTAL_TICKET_FORM;
+  static const FEEDBACK = _Paths.FEEDBACK;
 }
 
 abstract class _Paths {
@@ -31,4 +32,5 @@ abstract class _Paths {
   static const PDF_SIGN = '/pdf-sign';
   static const PORTAL_VIEW = '/portal-view';
   static const PORTAL_TICKET_FORM = '/portal-ticket-form';
+  static const FEEDBACK = '/feedback';
 }
