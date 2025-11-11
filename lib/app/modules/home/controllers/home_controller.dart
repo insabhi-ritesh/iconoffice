@@ -98,19 +98,63 @@ class HomeController extends GetxController {
       filterTicketsByStatus(currentFilter.value);
       return;
     }
-    final filteredTickets = originalTickets.where((ticket) {
-      final ticketNoLower = ticket.ticketNo.toLowerCase();
-      final customerNameLower = ticket.tpartnerName.toLowerCase();
-      final queryLower = query.toLowerCase();
 
-      final matchesTicketNo = ticketNoLower.contains(queryLower);
-      final matchesCustomerName = customerNameLower.contains(queryLower);
+    // Perform server-side search using the `search` parameter
+    _performServerSearch(query);
+  }
 
-      final matchesQuery = matchesTicketNo || matchesCustomerName;
-      final matchesStatus = currentFilter.value == 'All' || ticket.state == statusMap[currentFilter.value];
-      return matchesQuery && matchesStatus;
-    }).toList();
-    tickets.assignAll(filteredTickets);
+  Future<void> _performServerSearch(String query) async {
+    isLoading.value = true;
+    tickets.clear();
+    currentPage = 1;
+    isLastPage.value = false;
+
+    var partnerId = box.read('partnerId');
+    try {
+      final statusParam = currentFilter.value != 'All'
+          ? statusMap[currentFilter.value] ?? ''
+          : '';
+      final url = Uri.parse(
+        '${Constant.BASE_URL}${ApiEndPoints.GET_TICKET_DATA}'
+        '?partner_id=$partnerId'
+        '&page=$currentPage'
+        '&limit=$pageSize'
+        '&search=${Uri.encodeComponent(query)}' // Server-side partial search
+        '${statusParam.isNotEmpty ? "&status=$statusParam" : ""}',
+      );
+
+      log("Search URL: $url");
+      var response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        var res = jsonDecode(response.body);
+        if (res['data'] != null && res['data'] is List) {
+          List<Ticket> newTickets = [];
+          for (var element in res['data']) {
+            newTickets.add(Ticket.fromJson(element));
+          }
+
+          tickets.assignAll(newTickets);
+          originalTickets
+            ..clear()
+            ..addAll(newTickets);
+
+          if (newTickets.length < pageSize) {
+            isLastPage.value = true;
+          }
+        } else {
+          tickets.clear();
+          Get.snackbar("No Result", "No tickets found for '$query'");
+        }
+      } else {
+        Get.snackbar("Error", "Search failed");
+      }
+    } catch (e) {
+      log("Search error: $e");
+      Get.snackbar("Error", "Failed to search");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   final statusMap = {

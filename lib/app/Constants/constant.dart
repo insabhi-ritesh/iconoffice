@@ -10,9 +10,9 @@ class Constant {
   
   //-----------Live Url------//
   // static String BASE_URL = 'http://45.124.52.122:8069';
-  static String BASE_URL = 'https://iconofficesolutions.com.au';
+  // static String BASE_URL = 'https://iconofficesolutions.com.au';
   // static String BASE_URL = 'http://192.168.0.119:7014';
-  // static String BASE_URL = 'http://192.168.0.102:8521';
+  static String BASE_URL = 'http://192.168.0.153:8520';
 
   static String odooUrl = BASE_URL;
 }
