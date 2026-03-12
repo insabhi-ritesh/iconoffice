@@ -18,6 +18,8 @@ import '../modules/portal_view/bindings/portal_view_binding.dart';
 import '../modules/portal_view/views/portal_view_view.dart';
 import '../modules/profile_page/bindings/profile_page_binding.dart';
 import '../modules/profile_page/views/profile_page_view.dart';
+import '../modules/signature_and_pdf/bindings/signature_and_pdf_binding.dart';
+import '../modules/signature_and_pdf/views/signature_and_pdf_view.dart';
 import '../modules/splash_screen/bindings/splash_screen_binding.dart';
 import '../modules/splash_screen/views/splash_screen_view.dart';
 import '../modules/ticket_detail_page/bindings/ticket_detail_page_binding.dart';
@@ -99,6 +101,11 @@ class AppPages {
       name: _Paths.FEEDBACK,
       page: () => const FeedbackView(),
       binding: FeedbackBinding(),
+    ),
+    GetPage(
+      name: _Paths.SIGNATURE_AND_PDF,
+      page: () => SignatureAndPdfView(),
+      binding: SignatureAndPdfBinding(),
     ),
   ];
 }
