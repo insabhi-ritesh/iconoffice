@@ -1,4 +1,3 @@
-
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:odoo_rpc/odoo_rpc.dart';
@@ -7,16 +6,16 @@ import '../routes/app_pages.dart';
 
 class Constant {
   static OdooClient? odooRpc;
-  
+
   //-----------Live Url------//
   // static String BASE_URL = 'http://45.124.52.122:8069';
   static String BASE_URL = 'https://iconofficesolutions.com.au';
-  // static String BASE_URL = 'http://192.168.0.119:7014';
-  // static String BASE_URL = 'http://192.168.0.153:8520';
+  // static String BASE_URL = 'http://10.117.8.78:8410';
+  // static String BASE_URL = 'http://10.121.157.200:8520';
 
   static String odooUrl = BASE_URL;
 }
- 
+
 class ApiEndPoints {
   static const String LOGIN_API = '/api/app/login';
   static const String USER_PROFILE_API = '/api/app/profile';
@@ -29,10 +28,12 @@ class ApiEndPoints {
   static const String GET_SEARCH_PRODUCT = '/api/app/helpdesk/search_product';
   static const String UPDATE_STATE = '/api/app/helpdesk/update_state';
   static const String SEARCH_USER = '/api/app/helpdesk/search_user';
-  static const String CREATE_HELPDESK_TIME_SHEET = '/api/app/helpdesk/timesheet';
+  static const String CREATE_HELPDESK_TIME_SHEET =
+      '/api/app/helpdesk/timesheet';
   static const String SEND_MESSAGE = '/app/api/helpdesk/send_message';
   static const String RECEIVE_MESSAGE = '/app/api/helpdesk/receive_message';
-  static const String CREATE_HELPDESK_TICKET = '/api/app/helpdesk/ticket/create';
+  static const String CREATE_HELPDESK_TICKET =
+      '/api/app/helpdesk/ticket/create';
   static const String DELETE_ATTACHMENT = '/app/api/helpdesk/delete_attachment';
 }
 

@@ -4,30 +4,45 @@ import 'dart:io';
 
 class SignatureAndPdfController extends GetxController {
   final Rx<File?> selectedPdf = Rx<File?>(null);
+  final Rx<String?> signedPdfPath = Rx<String?>(null);
   final storage = GetStorage();
 
-  String _getTicketKey(String ticketNo) {
-    return 'saved_pdf_path_$ticketNo';
-  }
+  String _getTicketKey(String ticketNo) => 'saved_pdf_path_$ticketNo';
+  String _getSignedKey(String ticketNo) => 'signed_pdf_path_$ticketNo';
 
   void loadSavedPdf(String ticketNo) {
-    final key = _getTicketKey(ticketNo);
-    final savedPath = storage.read<String>(key);
+    final savedPath = storage.read<String>(_getTicketKey(ticketNo));
     if (savedPath != null && File(savedPath).existsSync()) {
       selectedPdf.value = File(savedPath);
     } else {
-      selectedPdf.value = null;
+      selectedPdf.value = null; // ← clears if deleted externally
+    }
+
+    final signedPath = storage.read<String>(_getSignedKey(ticketNo));
+    if (signedPath != null && File(signedPath).existsSync()) {
+      signedPdfPath.value = signedPath;
+    } else {
+      signedPdfPath.value = null;
     }
   }
 
   Future<void> savePdfPath(String path, String ticketNo) async {
-    final key = _getTicketKey(ticketNo);
-    await storage.write(key, path);
+    await storage.write(_getTicketKey(ticketNo), path);
+  }
+
+  Future<void> saveSignedPdfPath(String path, String ticketNo) async {
+    await storage.write(_getSignedKey(ticketNo), path);
+    signedPdfPath.value = path;
   }
 
   Future<void> clearSavedPdf(String ticketNo) async {
-    final key = _getTicketKey(ticketNo);
-    await storage.remove(key);
+    await storage.remove(_getTicketKey(ticketNo));
     selectedPdf.value = null;
+  }
+
+  // ← NEW: called from ticket_sections delete icon
+  Future<void> clearSignedPdf(String ticketNo) async {
+    await storage.remove(_getSignedKey(ticketNo));
+    signedPdfPath.value = null;
   }
 }
