@@ -8,7 +8,8 @@ import 'package:insabhi_icon_office/app/Constants/constant.dart';
 
 import '../../../routes/app_pages.dart';
 
-class LoginPageController extends GetxController with GetSingleTickerProviderStateMixin {
+class LoginPageController extends GetxController
+    with GetSingleTickerProviderStateMixin {
   //TODO: Implement LoginPageController
   var UserName = TextEditingController();
   var Password = TextEditingController();
@@ -20,6 +21,7 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
   var rememberMe = false.obs;
   var Switch_page = false.obs;
   var isPasswordVisible = false.obs;
+  var errorMessage = ''.obs; // ← new: drives inline error on the form
 
   @override
   void onInit() {
@@ -29,30 +31,24 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    animation = Tween<double>(begin: 0,end: 30).animate(
-      CurvedAnimation(
-        parent: animationController,
-        curve: Curves.easeInOut,
-      ),
+    animation = Tween<double>(begin: 0, end: 30).animate(
+      CurvedAnimation(parent: animationController, curve: Curves.easeInOut),
     );
-    
   }
 
-  Future<void> login(String UserName, String Password, bool remember ) async {
+  Future<void> login(String UserName, String Password, bool remember) async {
+    errorMessage.value = '';
     isLoading.value = true;
-    if(UserName.isEmpty || Password.isEmpty) {
-      Get.snackbar('Error', 'Username and password cannot be empty.');
+    if (UserName.isEmpty || Password.isEmpty) {
+      isLoading.value = false;
+      errorMessage.value = 'Please enter both username and password.';
       return;
     }
 
     try {
-
-    var response = await http.post(
+      var response = await http.post(
         Uri.parse('${Constant.BASE_URL}${ApiEndPoints.LOGIN_API}'),
-        body: {
-          'login': UserName,
-          'password': Password,
-        },
+        body: {'login': UserName, 'password': Password},
       );
 
       log(response.body);
@@ -76,40 +72,41 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
           box.write('phone', phone);
           box.write('user_ID', userId);
           box.write('is_portal_user', portal_user);
-          if (remember == true){
+          if (remember == true) {
             var isLogging = true;
             box.write('isLogged', isLogging);
           }
-          
+
           box.write('partnerId', partnerId);
           // int id = box.read('partnerId');
           var print = box.read('isLogged');
           log("Permit list: $print");
-          Get.snackbar('Success', 'Login successful!');
           log('Login Successfully with status code: ${response.statusCode}');
 
           bool Switch_page = box.read('is_portal_user') ?? false;
 
           if (Switch_page == true) {
             Get.offAllNamed(Routes.PORTAL_VIEW);
-          }else {
+          } else {
             Get.offAllNamed(Routes.HOME);
           }
         } else {
           isLoading.value = false;
-          Get.snackbar("Error", "Wrong login and password");
+          errorMessage.value =
+              'Incorrect username or password. Please try again.';
           log("Login failed with response: ${response.body}");
         }
       } else {
         isLoading.value = false;
         await Future.delayed(const Duration(seconds: 2));
         Get.back();
-        Get.snackbar("Error", "Wrong login and password");
+        errorMessage.value = 'Unable to sign in. Please try again.';
       }
-    } catch (e){
+    } catch (e) {
       isLoading.value = false;
       log("Login Error $e");
-      Get.snackbar('Error', 'Login failed. Please try again.');
+      errorMessage.value =
+          'Connection error. Please check your internet and try again.';
     }
   }
 
@@ -122,14 +119,15 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
       return;
     }
 
-    final url = '${Constant.BASE_URL}${ApiEndPoints.SAVE_TOKEN}?partner_id=$partnerId&token=$token';
+    final url =
+        '${Constant.BASE_URL}${ApiEndPoints.SAVE_TOKEN}?partner_id=$partnerId&token=$token';
     log(url);
 
     try {
       final response = await http.post(Uri.parse(url));
       log(response.body);
 
-      if(response.statusCode == 200) {
+      if (response.statusCode == 200) {
         log('This is the response code: $response');
       }
     } catch (e) {
@@ -137,10 +135,9 @@ class LoginPageController extends GetxController with GetSingleTickerProviderSta
     }
   }
 
-  Future<void> logout () async {
+  Future<void> logout() async {
     await GetStorage().erase();
 
     Get.offAllNamed(Routes.LOGIN_PAGE);
   }
-
 }
