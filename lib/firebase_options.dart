@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '981787185283',
     projectId: 'insabhi-icon-office',
     storageBucket: 'insabhi-icon-office.firebasestorage.app',
-    iosBundleId: 'com.example.insabhiIconOffice',
+    iosBundleId: 'com.iconoffice.iconconnect',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '981787185283',
     projectId: 'insabhi-icon-office',
     storageBucket: 'insabhi-icon-office.firebasestorage.app',
-    iosBundleId: 'com.example.insabhiIconOffice',
+    iosBundleId: 'com.iconoffice.iconconnect',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
